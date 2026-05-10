@@ -1,0 +1,109 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui;
+  --font-sans: "Inter", ui-sans-serif, system-ui;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+}
+
+:root {
+  /* Clean white luxury palette */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.18 0.02 260);
+
+  --navy: oklch(0.20 0.05 260);
+  --navy-deep: oklch(0.13 0.04 260);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 260);
+
+  --primary: oklch(0.20 0.05 260);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.97 0.01 260);
+  --secondary-foreground: oklch(0.20 0.05 260);
+
+  --muted: oklch(0.97 0.01 260);
+  --muted-foreground: oklch(0.48 0.02 260);
+
+  --accent: oklch(0.95 0.02 260);
+  --accent-foreground: oklch(0.20 0.05 260);
+
+  --destructive: oklch(0.60 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.92 0.005 260);
+  --input: oklch(0.92 0.005 260);
+  --ring: oklch(0.20 0.05 260 / 0.4);
+
+  --radius: 1rem;
+
+  --shadow-soft: 0 10px 30px -12px oklch(0.18 0.02 260 / 0.12);
+  --shadow-glow: 0 30px 80px -20px oklch(0.18 0.02 260 / 0.18);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+}
+
+@layer utilities {
+  .glass-light {
+    background: oklch(1 0 0 / 0.7);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid oklch(0.18 0.02 260 / 0.06);
+  }
+  .glass-dark {
+    background: oklch(0 0 0 / 0.25);
+    backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid oklch(1 0 0 / 0.15);
+  }
+  .surface-card {
+    background: var(--background);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-soft);
+  }
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap");
