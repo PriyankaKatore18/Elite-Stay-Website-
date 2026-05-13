@@ -2,6 +2,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+const AUTH_STORAGE_KEY = 'elite-stay-dashboard-auth';
+
+async function authLockNoOp<R>(_name: string, _timeout: number, fn: () => Promise<R>) {
+  return await fn();
+}
+
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
@@ -21,8 +27,14 @@ function createSupabaseClient() {
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
       storage: typeof window !== 'undefined' ? localStorage : undefined,
+      storageKey: AUTH_STORAGE_KEY,
       persistSession: true,
       autoRefreshToken: true,
+      detectSessionInUrl: false,
+      // This app only uses direct email/password auth, so we can avoid
+      // cross-tab lock contention that sometimes leaves auth calls hanging
+      // during local development with many open localhost tabs.
+      lock: authLockNoOp,
     }
   });
 }
@@ -37,4 +49,3 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
     return Reflect.get(_supabase, prop, receiver);
   },
 });
-

@@ -38,36 +38,35 @@
 }
 
 :root {
-  /* Clean white luxury palette */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.18 0.02 260);
+  --background: #f8fafc;
+  --foreground: #102033;
 
-  --navy: oklch(0.20 0.05 260);
-  --navy-deep: oklch(0.13 0.04 260);
+  --navy: #1e3a5f;
+  --navy-deep: #152b45;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 260);
+  --card: #ffffff;
+  --card-foreground: #102033;
+  --popover: #ffffff;
+  --popover-foreground: #102033;
 
-  --primary: oklch(0.20 0.05 260);
-  --primary-foreground: oklch(0.99 0 0);
+  --primary: #1e3a5f;
+  --primary-foreground: #ffffff;
 
-  --secondary: oklch(0.97 0.01 260);
-  --secondary-foreground: oklch(0.20 0.05 260);
+  --secondary: #eef3f7;
+  --secondary-foreground: #102033;
 
-  --muted: oklch(0.97 0.01 260);
-  --muted-foreground: oklch(0.48 0.02 260);
+  --muted: #eef3f7;
+  --muted-foreground: #5e6b7a;
 
-  --accent: oklch(0.95 0.02 260);
-  --accent-foreground: oklch(0.20 0.05 260);
+  --accent: #d4a373;
+  --accent-foreground: #ffffff;
 
-  --destructive: oklch(0.60 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
+  --destructive: #d15241;
+  --destructive-foreground: #ffffff;
 
-  --border: oklch(0.92 0.005 260);
-  --input: oklch(0.92 0.005 260);
-  --ring: oklch(0.20 0.05 260 / 0.4);
+  --border: #d9e3ec;
+  --input: #d9e3ec;
+  --ring: rgba(30, 58, 95, 0.35);
 
   --radius: 1rem;
 
@@ -104,6 +103,28 @@
     border: 1px solid var(--border);
     box-shadow: var(--shadow-soft);
   }
+
+  .fade-mask-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+
+  .marquee-track {
+    width: max-content;
+    animation: marquee-left 28s linear infinite;
+  }
+
+  .marquee-track:hover {
+    animation-play-state: paused;
+  }
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap");
+@keyframes marquee-left {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
