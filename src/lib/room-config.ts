@@ -1,6 +1,10 @@
 import roomSingle from "@/assets/room-single.jpg";
 import roomDouble from "@/assets/room-double.jpg";
 import roomTriple from "@/assets/room-triple.jpg";
+import gallery1 from "@/assets/gallery-1.jpg";
+import gallery2 from "@/assets/gallery-2.jpg";
+import gallery3 from "@/assets/gallery-3.jpg";
+import gallery4 from "@/assets/gallery-4.jpg";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const ROOM_IMAGE_BUCKET = "room-images";
@@ -18,11 +22,12 @@ type RoomCardBase = {
   tag: string;
   features: string[];
   status: string;
-  defaultImage: string;
+  defaultImages: [string, string, string];
 };
 
-export type RoomCard = Omit<RoomCardBase, "defaultImage"> & {
+export type RoomCard = Omit<RoomCardBase, "defaultImages"> & {
   img: string;
+  images: string[];
   imagePath: string | null;
 };
 
@@ -34,7 +39,7 @@ const ROOM_CARD_BASE: RoomCardBase[] = [
     tag: "AC",
     features: ["2 beds", "Study table", "Wardrobe", "Balcony"],
     status: "Available",
-    defaultImage: roomSingle,
+    defaultImages: [roomSingle, gallery1, gallery2],
   },
   {
     slug: "two-room",
@@ -43,7 +48,7 @@ const ROOM_CARD_BASE: RoomCardBase[] = [
     tag: "AC",
     features: ["2 beds", "2 study tables", "2 wardrobes", "Balcony"],
     status: "Few Left",
-    defaultImage: roomDouble,
+    defaultImages: [roomDouble, gallery2, gallery3],
   },
   {
     slug: "three-room",
@@ -52,14 +57,15 @@ const ROOM_CARD_BASE: RoomCardBase[] = [
     tag: "Non-AC",
     features: ["3 beds", "3 study tables", "3 wardrobes", "Balcony"],
     status: "Available",
-    defaultImage: roomTriple,
+    defaultImages: [roomTriple, gallery3, gallery4],
   },
 ];
 
 export function getDefaultRoomCards(): RoomCard[] {
-  return ROOM_CARD_BASE.map(({ defaultImage, ...room }) => ({
+  return ROOM_CARD_BASE.map(({ defaultImages, ...room }) => ({
     ...room,
-    img: defaultImage,
+    img: defaultImages[0],
+    images: [...defaultImages],
     imagePath: null,
   }));
 }
@@ -72,10 +78,12 @@ export function buildRoomCards(
 
   return getDefaultRoomCards().map((room) => {
     const imagePath = imageMap.get(room.slug) ?? null;
+    const images = imagePath ? [resolveImage(imagePath), ...room.images.slice(1)] : room.images;
 
     return {
       ...room,
-      img: imagePath ? resolveImage(imagePath) : room.img,
+      img: images[0],
+      images,
       imagePath,
     };
   });

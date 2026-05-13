@@ -38,6 +38,14 @@ import {
   ROOM_IMAGE_BUCKET,
   type RoomCard,
 } from "@/lib/room-config";
+import {
+  Carousel,
+  type CarouselApi,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -563,6 +571,79 @@ function About({ images }: { images: GalleryAsset[] }) {
   );
 }
 
+function RoomCardCarousel({ room }: { room: RoomCard }) {
+  const [api, setApi] = useState<CarouselApi>();
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    const updateActiveSlide = () => {
+      setActiveSlide(api.selectedScrollSnap());
+    };
+
+    updateActiveSlide();
+    api.on("select", updateActiveSlide);
+    api.on("reInit", updateActiveSlide);
+
+    return () => {
+      api.off("select", updateActiveSlide);
+      api.off("reInit", updateActiveSlide);
+    };
+  }, [api]);
+
+  return (
+    <div className="relative h-56 overflow-hidden">
+      <Carousel setApi={setApi} opts={{ align: "start", loop: true }} className="h-full">
+        <CarouselContent className="ml-0 h-full">
+          {room.images.map((image, index) => (
+            <CarouselItem key={`${room.slug}-image-${index}`} className="pl-0">
+              <img
+                src={image}
+                alt={`${room.name} room view ${index + 1}`}
+                className="h-56 w-full object-cover transition duration-700 group-hover:scale-110"
+                loading="lazy"
+              />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+
+        <div className="absolute left-3 top-3 z-10 flex gap-2">
+          <span className="rounded-full bg-white/92 px-2.5 py-1 text-[11px] font-medium text-foreground backdrop-blur">
+            {room.tag}
+          </span>
+          <span className="rounded-full bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground">
+            {room.status}
+          </span>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-3 z-10 flex items-center justify-between px-3">
+          <CarouselPrevious
+            variant="secondary"
+            className="static h-9 w-9 translate-y-0 border border-white/70 bg-white/90 text-foreground shadow-sm hover:bg-white"
+          />
+          <div className="flex items-center gap-1.5">
+            {room.images.map((_, index) => (
+              <span
+                key={`${room.slug}-indicator-${index}`}
+                className={`h-2 rounded-full transition-all ${
+                  index === activeSlide ? "w-6 bg-white" : "w-2 bg-white/55"
+                }`}
+              />
+            ))}
+          </div>
+          <CarouselNext
+            variant="secondary"
+            className="static h-9 w-9 translate-y-0 border border-white/70 bg-white/90 text-foreground shadow-sm hover:bg-white"
+          />
+        </div>
+      </Carousel>
+    </div>
+  );
+}
+
 function Rooms({ rooms }: { rooms: RoomCard[] }) {
   return (
     <section id="rooms" className="relative bg-muted/40 pb-14 pt-10 sm:pb-16 sm:pt-12">
@@ -586,22 +667,7 @@ function Rooms({ rooms }: { rooms: RoomCard[] }) {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="group relative overflow-hidden rounded-3xl surface-card transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[var(--shadow-glow)]"
             >
-              <div className="relative h-56 overflow-hidden">
-                <img
-                  src={room.img}
-                  alt={room.name}
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
-                  loading="lazy"
-                />
-                <div className="absolute left-3 top-3 flex gap-2">
-                  <span className="rounded-full bg-white/92 px-2.5 py-1 text-[11px] font-medium text-foreground backdrop-blur">
-                    {room.tag}
-                  </span>
-                  <span className="rounded-full bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground">
-                    {room.status}
-                  </span>
-                </div>
-              </div>
+              <RoomCardCarousel room={room} />
               <div className="p-6">
                 <div className="flex items-baseline justify-between gap-4">
                   <h3 className="font-display text-xl font-bold">{room.name}</h3>
