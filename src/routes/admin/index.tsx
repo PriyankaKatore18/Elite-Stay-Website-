@@ -16,6 +16,7 @@ import {
   Trash2,
   UserCheck,
 } from "lucide-react";
+import logoMark from "@/assets/logo-mark.png";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -492,9 +493,13 @@ function AdminDashboard() {
       <header className="border-b border-border/70 bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary font-display font-bold text-primary-foreground">
-              E
-            </div>
+            <img
+              src={logoMark}
+              alt="Elite Stay"
+              className="h-11 w-11 rounded-2xl object-contain shadow-[var(--shadow-soft)]"
+              width={312}
+              height={312}
+            />
             <div>
               <div className="font-display font-bold">Elite Stay Admin</div>
               <div className="text-xs text-muted-foreground">Rooms, gallery, and enquiries dashboard</div>

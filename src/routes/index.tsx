@@ -22,8 +22,9 @@ import {
   Zap,
 } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
+import aboutBuilding from "@/assets/about-building.png";
 import hero from "@/assets/hero.jpg";
-import siteLogo from "@/assets/logo.png";
+import siteLogo from "@/assets/logo-mark.png";
 import { supabase } from "@/integrations/supabase/client";
 import {
   GALLERY_IMAGE_BUCKET,
@@ -294,14 +295,14 @@ function dedupeGalleryImages(images: GalleryAsset[]) {
   });
 }
 
-function BrandLogo({ className = "h-10 w-auto" }: { className?: string }) {
+function BrandLogo({ className = "h-10 w-10" }: { className?: string }) {
   return (
     <img
       src={siteLogo}
       alt="Elite Stay"
       className={`${className} object-contain`}
-      width={232}
-      height={64}
+      width={312}
+      height={312}
       loading="eager"
     />
   );
@@ -309,13 +310,9 @@ function BrandLogo({ className = "h-10 w-auto" }: { className?: string }) {
 
 function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M19.05 4.91A9.82 9.82 0 0 0 12.04 2C6.58 2 2.14 6.44 2.14 11.9c0 1.75.46 3.46 1.32 4.96L2 22l5.31-1.39a9.8 9.8 0 0 0 4.73 1.2h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.11-2.9-6.99Zm-7.01 15.23h-.01a8.11 8.11 0 0 1-4.13-1.13l-.3-.18-3.15.83.84-3.07-.2-.31a8.13 8.13 0 0 1-1.25-4.37c0-4.49 3.66-8.15 8.16-8.15 2.17 0 4.21.84 5.75 2.38a8.08 8.08 0 0 1 2.39 5.77c0 4.49-3.66 8.14-8.14 8.14Zm4.47-6.1c-.24-.12-1.41-.69-1.63-.77-.22-.08-.38-.12-.54.12-.16.24-.61.77-.75.93-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.21-.72-.64-1.2-1.43-1.35-1.67-.14-.24-.02-.37.11-.49.11-.11.24-.28.37-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.48-.4-.41-.54-.42h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2 0 1.18.86 2.32.98 2.48.12.16 1.69 2.58 4.1 3.62.57.25 1.02.4 1.37.52.58.18 1.1.15 1.51.09.46-.07 1.41-.58 1.61-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z" />
+    <svg viewBox="0 0 16 16" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M13.601 2.326A7.854 7.854 0 0 0 1.93 12.56L0 16l3.692-.97a7.854 7.854 0 0 0 3.909 1.042h.003A7.855 7.855 0 0 0 13.6 2.326Zm-5.997 12.07a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.194.576.587-2.14-.156-.225a6.556 6.556 0 0 1-1.007-3.505 6.557 6.557 0 0 1 11.2-4.634 6.556 6.556 0 0 1-4.636 11.19Z" />
+      <path d="M11.012 9.848c-.184-.092-1.087-.536-1.255-.597-.168-.061-.29-.092-.411.092-.121.184-.468.597-.574.719-.105.123-.21.138-.395.046-.184-.092-.778-.286-1.482-.912-.547-.486-.916-1.087-1.023-1.271-.106-.184-.011-.284.08-.375.082-.081.184-.21.276-.314.092-.105.123-.184.184-.307.061-.123.03-.23-.015-.322-.046-.092-.411-.99-.564-1.355-.149-.358-.3-.31-.411-.315-.105-.005-.23-.007-.352-.007a.678.678 0 0 0-.49.23c-.168.184-.643.628-.643 1.53 0 .902.659 1.774.75 1.896.092.123 1.298 2.104 3.229 2.89.464.2.826.32 1.109.41.465.149.889.128 1.224.078.373-.056 1.087-.444 1.24-.873.153-.429.153-.797.107-.873-.046-.077-.168-.123-.352-.215Z" />
     </svg>
   );
 }
@@ -324,8 +321,11 @@ function Nav() {
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#1E3A5F]/96 shadow-sm backdrop-blur">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-5">
-        <a href="#home" className="flex shrink-0 items-center">
-          <BrandLogo className="h-10 w-auto brightness-0 invert sm:h-11" />
+        <a href="#home" className="flex shrink-0 items-center gap-3">
+          <BrandLogo className="h-11 w-11 rounded-2xl shadow-[var(--shadow-soft)] sm:h-12 sm:w-12" />
+          <span className="font-display text-xl font-semibold tracking-[0.04em] text-white sm:text-2xl">
+            Elite Stay
+          </span>
         </a>
 
         <div className="flex items-center gap-3">
@@ -407,7 +407,7 @@ function Hero() {
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-6 py-3.5 font-semibold text-white shadow-xl transition hover:scale-[1.03] hover:bg-[#1fb85a]"
             >
-              <WhatsAppIcon className="h-4 w-4" /> WhatsApp Enquiry
+              <WhatsAppIcon className="h-5 w-5" /> WhatsApp Enquiry
             </a>
           </div>
         </motion.div>
@@ -465,7 +465,7 @@ function About({ images }: { images: GalleryAsset[] }) {
 
   return (
     <section id="about" className="relative pb-8 pt-18 sm:pb-10 sm:pt-20">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-stretch lg:gap-14">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start lg:gap-14">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -506,20 +506,24 @@ function About({ images }: { images: GalleryAsset[] }) {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="min-w-0 overflow-hidden rounded-[2rem] border border-border/80 bg-white/92 p-5 shadow-[var(--shadow-glow)] lg:h-full"
+          className="min-w-0 overflow-hidden rounded-[2rem] border border-border/80 bg-white/92 p-5 shadow-[var(--shadow-glow)]"
         >
-          <div className="flex h-full flex-col rounded-[1.6rem] bg-muted/55 p-5">
-            <div className="text-xs uppercase tracking-[0.22em] text-primary/80">
-              Safe - Clean - Fully Furnished - Peaceful Living Near MIT Pune
-            </div>
-            <div className="mt-4 max-w-xl">
-              <h3 className="font-display text-2xl font-bold text-foreground sm:text-[1.75rem]">
-                A stay built for comfort, focus, and everyday ease.
-              </h3>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-                From fully furnished rooms to a calm atmosphere and practical amenities, Elite Stay
-                is designed to help students and working professionals feel settled from day one.
-              </p>
+          <div className="flex flex-col rounded-[1.6rem] bg-muted/55 p-5">
+            <div className="relative overflow-hidden rounded-[1.5rem] border border-white/80 bg-white shadow-[var(--shadow-soft)]">
+              <img
+                src={aboutBuilding}
+                alt="Elite Stay building exterior"
+                className="h-56 w-full object-cover sm:h-64 lg:h-72"
+                loading="lazy"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#102033]/78 via-[#102033]/38 to-transparent px-5 py-5 text-white">
+                <div className="inline-flex rounded-full bg-white/14 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur">
+                  Elite Stay Exterior
+                </div>
+                <div className="mt-3 max-w-md font-display text-2xl font-bold sm:text-[1.75rem]">
+                  A calm, premium property designed for modern PG living.
+                </div>
+              </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {["Near MIT Pune", "Move-in ready rooms", "Peaceful daily living"].map((item) => (
@@ -531,12 +535,12 @@ function About({ images }: { images: GalleryAsset[] }) {
                 </span>
               ))}
             </div>
-            <div className="mt-5 flex min-h-[14rem] flex-1 items-center overflow-hidden rounded-[1.4rem] fade-mask-x lg:min-h-[20rem]">
+            <div className="mt-4 flex min-h-[11rem] items-center overflow-hidden rounded-[1.4rem] fade-mask-x lg:min-h-[15rem]">
               <div className="marquee-track flex items-center gap-4 py-1">
                 {marqueeImages.map((image, index) => (
                   <div
                     key={`${image.id}-${index}`}
-                    className="h-40 w-56 shrink-0 overflow-hidden rounded-[1.2rem] bg-white shadow-[var(--shadow-soft)] sm:h-44 sm:w-60 lg:h-52 lg:w-72"
+                    className="h-32 w-48 shrink-0 overflow-hidden rounded-[1.2rem] bg-white shadow-[var(--shadow-soft)] sm:h-36 sm:w-52 lg:h-40 lg:w-60"
                   >
                     <img
                       src={image.src}
@@ -548,7 +552,7 @@ function About({ images }: { images: GalleryAsset[] }) {
                 ))}
               </div>
             </div>
-            <p className="mt-6 text-sm leading-7 text-muted-foreground">
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
               Images uploaded from the admin gallery also flow into this moving preview strip
               automatically.
             </p>
@@ -630,7 +634,7 @@ function Rooms({ rooms }: { rooms: RoomCard[] }) {
                     aria-label={`Chat on WhatsApp about ${room.name}`}
                     className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[var(--shadow-soft)] transition hover:scale-[1.05] hover:bg-[#1fb85a]"
                   >
-                    <WhatsAppIcon className="h-4 w-4" />
+                    <WhatsAppIcon className="h-[18px] w-[18px]" />
                   </a>
                 </div>
               </div>
@@ -644,14 +648,14 @@ function Rooms({ rooms }: { rooms: RoomCard[] }) {
 
 function Facilities() {
   return (
-    <section id="facilities" className="relative overflow-hidden pb-10 pt-18 sm:pb-12 sm:pt-20">
+    <section id="facilities" className="relative overflow-hidden pb-10 pt-12 sm:pb-12 sm:pt-14">
       <div className="absolute inset-x-0 top-12 -z-10 mx-auto h-72 max-w-5xl rounded-full bg-[radial-gradient(circle,_rgba(30,58,95,0.12),_transparent_68%)] blur-3xl" />
       <div className="absolute left-0 top-1/3 -z-10 h-56 w-56 rounded-full bg-[radial-gradient(circle,_rgba(30,58,95,0.08),_transparent_70%)] blur-3xl" />
 
       <div className="mx-auto max-w-7xl px-5">
-        <div className="relative overflow-hidden rounded-[2rem] border border-border/80 bg-white/92 px-6 py-8 shadow-[var(--shadow-glow)] backdrop-blur-sm sm:px-8 lg:px-10 lg:py-10">
+        <div className="relative overflow-hidden rounded-[2rem] border border-border/80 bg-white/92 px-6 py-6 shadow-[var(--shadow-glow)] backdrop-blur-sm sm:px-8 sm:py-7 lg:px-10 lg:py-8">
           <div className="absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(circle_at_top_right,_rgba(30,58,95,0.14),_transparent_65%)] lg:block" />
-          <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-end">
+          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-start lg:gap-8">
             <div className="max-w-3xl">
               <SectionLabel>Facilities</SectionLabel>
               <h2 className="mt-4 font-display text-4xl leading-tight font-bold sm:text-5xl lg:text-6xl">
@@ -982,7 +986,7 @@ function Contact({ roomOptions }: { roomOptions: string[] }) {
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-5 py-3 font-semibold text-white shadow-[var(--shadow-soft)] transition hover:scale-[1.03] hover:bg-[#1fb85a]"
             >
-              <WhatsAppIcon className="h-4 w-4" /> Chat on WhatsApp
+              <WhatsAppIcon className="h-5 w-5" /> Chat on WhatsApp
             </a>
             <a
               href={MAPS_DIRECTIONS_URL}
@@ -1131,7 +1135,7 @@ function Footer() {
     <footer className="relative mt-6 bg-[#1E3A5F] text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-[1.25fr_0.75fr_1fr]">
         <div>
-          <BrandLogo className="h-12 w-auto brightness-0 invert" />
+          <BrandLogo className="h-14 w-14 rounded-[1.2rem] shadow-[0_18px_40px_rgba(0,0,0,0.18)]" />
           <p className="mt-4 max-w-sm text-sm leading-7 text-white/78">
             Comfortable and secure PG stay for students and professionals with peaceful living,
             modern rooms, and responsive support.
@@ -1217,7 +1221,7 @@ function FloatingActions() {
         rel="noreferrer"
         className="grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-xl transition hover:scale-110 hover:bg-[#1fb85a]"
       >
-        <WhatsAppIcon className="h-6 w-6" />
+        <WhatsAppIcon className="h-7 w-7" />
       </a>
     </div>
   );

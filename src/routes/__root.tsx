@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import siteFavicon from "../assets/favicon.png";
+import siteFavicon from "../assets/logo-mark.png";
 
 function NotFoundComponent() {
   return (

@@ -3,6 +3,7 @@ import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { ArrowRight, Lock, Mail, ShieldCheck } from "lucide-react";
 import { z } from "zod";
+import logoMark from "@/assets/logo-mark.png";
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD } from "@/lib/room-config";
 
@@ -266,9 +267,18 @@ function AdminLogin() {
           <div className="absolute -left-12 top-8 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-0 h-52 w-52 rounded-full bg-[#cfa64a]/20 blur-3xl" />
 
-          <Link to="/" className="relative text-xs text-white/75 transition hover:text-white">
-            Back to site
-          </Link>
+          <div className="relative flex items-center justify-between gap-4">
+            <Link to="/" className="text-xs text-white/75 transition hover:text-white">
+              Back to site
+            </Link>
+            <img
+              src={logoMark}
+              alt="Elite Stay"
+              className="h-12 w-12 rounded-2xl object-contain shadow-[0_16px_35px_rgba(0,0,0,0.18)]"
+              width={312}
+              height={312}
+            />
+          </div>
 
           <div className="relative mt-10 max-w-md">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs uppercase tracking-[0.22em] text-white/85">
