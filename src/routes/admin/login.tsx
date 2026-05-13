@@ -295,17 +295,7 @@ function AdminLogin() {
             </p>
           </div>
 
-          <div className="relative mt-10 rounded-[1.6rem] border border-white/14 bg-white/10 p-5 shadow-[0_20px_40px_rgba(0,0,0,0.15)] backdrop-blur">
-            <div className="text-xs uppercase tracking-[0.2em] text-white/70">Owner credentials</div>
-            <div className="mt-4 space-y-3">
-              <CredentialRow label="Email" value={DEFAULT_ADMIN_EMAIL} />
-              <CredentialRow label="Password" value={DEFAULT_ADMIN_PASSWORD} />
-            </div>
-            <p className="mt-4 text-sm text-white/72">
-              Keep this account as the only owner login for the dashboard. You can later change the
-              password inside Supabase Auth if needed.
-            </p>
-          </div>
+
         </section>
 
         <section className="flex items-center px-6 py-8 sm:px-10 lg:px-12">
