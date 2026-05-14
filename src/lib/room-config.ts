@@ -18,6 +18,7 @@ type RoomCategoryImageRow = Pick<Tables<"room_categories">, "slug" | "image_path
 type RoomCardBase = {
   slug: RoomCategorySlug;
   name: string;
+  description: string;
   price: string;
   tag: string;
   features: string[];
@@ -34,7 +35,8 @@ export type RoomCard = Omit<RoomCardBase, "defaultImages"> & {
 const ROOM_CARD_BASE: RoomCardBase[] = [
   {
     slug: "one-room",
-    name: "Single",
+    name: "Single Sharing",
+    description: "Private, peaceful, and fully maintained rooms for a comfortable stay near MIT Pune.",
     price: "Rs 12,000",
     tag: "AC",
     features: ["2 beds", "Study table", "Wardrobe", "Balcony"],
@@ -43,7 +45,8 @@ const ROOM_CARD_BASE: RoomCardBase[] = [
   },
   {
     slug: "two-room",
-    name: "Twin",
+    name: "Twin Sharing",
+    description: "Comfortable and spacious twin sharing rooms with modern amenities for a convenient stay.",
     price: "Rs 8,500",
     tag: "AC",
     features: ["2 beds", "2 study tables", "2 wardrobes", "Balcony"],
@@ -52,7 +55,8 @@ const ROOM_CARD_BASE: RoomCardBase[] = [
   },
   {
     slug: "three-room",
-    name: "Triple",
+    name: "Triple Sharing",
+    description: "Affordable and well-maintained rooms designed for comfortable student living.",
     price: "Rs 6,500",
     tag: "Non-AC",
     features: ["3 beds", "3 study tables", "3 wardrobes", "Balcony"],

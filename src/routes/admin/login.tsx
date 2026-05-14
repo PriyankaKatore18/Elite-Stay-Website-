@@ -286,7 +286,7 @@ function AdminLogin() {
               Single owner access
             </div>
             <h1 className="mt-5 font-display text-4xl font-bold leading-tight sm:text-5xl">
-              Sign in to the one owner dashboard for rooms, gallery, and enquiries.
+              Sign in to the one owner dashboard for hero media, rooms, gallery, and enquiries.
             </h1>
             <p className="mt-4 text-sm leading-7 text-white/78 sm:text-base">
               This project uses one built-in owner account. If the account needs a first-time
@@ -306,7 +306,8 @@ function AdminLogin() {
 
             <h2 className="mt-6 font-display text-3xl font-bold">Admin sign in</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Sign in to manage room images and enquiries for the single owner account.
+              Sign in to manage hero media, room images, gallery images, and enquiries for the
+              single owner account.
             </p>
 
             <form onSubmit={submit} className="mt-8 space-y-5">

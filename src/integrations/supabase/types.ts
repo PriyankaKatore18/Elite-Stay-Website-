@@ -95,6 +95,30 @@ export type Database = {
         }
         Relationships: []
       }
+      site_media: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          image_path: string | null
+          media_key: string
+          updated_at: string
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          image_path?: string | null
+          media_key: string
+          updated_at?: string
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          image_path?: string | null
+          media_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

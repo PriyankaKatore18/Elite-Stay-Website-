@@ -30,6 +30,14 @@ import {
   ROOM_IMAGE_BUCKET,
   type RoomCard,
 } from "@/lib/room-config";
+import {
+  buildHeroMedia,
+  filterHomepageGalleryRows,
+  getDefaultHeroMedia,
+  pickHeroMediaRow,
+  SITE_MEDIA_BUCKET,
+  type SiteMediaAsset,
+} from "@/lib/site-media-config";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Admin Dashboard - Elite Stay" }] }),
@@ -41,6 +49,7 @@ type Banner = {
   tone: "success" | "error";
   message: string;
 };
+type DashboardPanel = "hero" | "rooms" | "gallery" | "enquiries";
 
 function isHasRolePermissionError(message: string) {
   return message.toLowerCase().includes("permission denied for function has_role");
@@ -59,13 +68,18 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [activePanel, setActivePanel] = useState<DashboardPanel>("hero");
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const [heroMedia, setHeroMedia] = useState<SiteMediaAsset>(() => getDefaultHeroMedia());
   const [roomCards, setRoomCards] = useState<RoomCard[]>(() => getDefaultRoomCards());
   const [galleryItems, setGalleryItems] = useState<GalleryAsset[]>([]);
   const [screenError, setScreenError] = useState<string>("");
+  const [heroBanner, setHeroBanner] = useState<Banner | null>(null);
   const [roomBanner, setRoomBanner] = useState<Banner | null>(null);
   const [galleryBanner, setGalleryBanner] = useState<Banner | null>(null);
+  const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingSlug, setUploadingSlug] = useState<string | null>(null);
+  const [deletingHero, setDeletingHero] = useState(false);
   const [deletingRoomSlug, setDeletingRoomSlug] = useState<string | null>(null);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [deletingGalleryId, setDeletingGalleryId] = useState<string | null>(null);
@@ -153,14 +167,24 @@ function AdminDashboard() {
       );
 
       if (galleryResponse.error) {
+        setHeroBanner({
+          tone: "error",
+          message:
+            "The hero image manager could not load its saved image, so the homepage is still using the default bundled hero photo.",
+        });
         setGalleryBanner({
           tone: "error",
           message:
             "Custom gallery images could not be loaded. The public site will continue using the bundled website gallery images.",
         });
       } else {
+        setHeroMedia(
+          buildHeroMedia(pickHeroMediaRow(galleryResponse.data), (imagePath) =>
+            supabase.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(imagePath).data.publicUrl,
+          ),
+        );
         setGalleryItems(
-          buildGalleryImages(galleryResponse.data, (imagePath) =>
+          buildGalleryImages(filterHomepageGalleryRows(galleryResponse.data), (imagePath) =>
             supabase.storage.from(GALLERY_IMAGE_BUCKET).getPublicUrl(imagePath).data.publicUrl,
           ),
         );
@@ -206,6 +230,126 @@ function AdminDashboard() {
     }
 
     setEnquiries((current) => current.filter((item) => item.id !== id));
+  };
+
+  const uploadHeroImage = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setHeroBanner({ tone: "error", message: "Please choose a valid image file." });
+      return;
+    }
+
+    setUploadingHero(true);
+    setHeroBanner(null);
+
+    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const fileBaseName = normalizeFileBaseName(file.name, "hero-image");
+    const filePath = `hero/${fileBaseName}-${Date.now()}.${extension}`;
+    const altText = humanizeFileBaseName(fileBaseName) || "Elite Stay hero image";
+
+    const { error: uploadError } = await supabase.storage
+      .from(SITE_MEDIA_BUCKET)
+      .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+    if (uploadError) {
+      setUploadingHero(false);
+      setHeroBanner({ tone: "error", message: uploadError.message });
+      return;
+    }
+
+    const { data: createdRow, error: insertError } = await supabase
+      .from("gallery_images")
+      .insert({ image_path: filePath, alt_text: altText })
+      .select("id, image_path, alt_text, created_at")
+      .single();
+
+    if (insertError || !createdRow) {
+      await supabase.storage.from(SITE_MEDIA_BUCKET).remove([filePath]);
+      setUploadingHero(false);
+      setHeroBanner({ tone: "error", message: insertError?.message ?? "Hero image could not be saved." });
+      return;
+    }
+
+    let cleanupWarning = "";
+
+    if (heroMedia.recordId) {
+      const { error: deletePreviousRowError } = await supabase
+        .from("gallery_images")
+        .delete()
+        .eq("id", heroMedia.recordId);
+
+      if (deletePreviousRowError) {
+        cleanupWarning = ` The previous hero image record could not be cleaned up: ${deletePreviousRowError.message}`;
+      }
+    }
+
+    if (heroMedia.imagePath) {
+      const { error: deletePreviousStorageError } = await supabase.storage
+        .from(SITE_MEDIA_BUCKET)
+        .remove([heroMedia.imagePath]);
+
+      if (!cleanupWarning && deletePreviousStorageError) {
+        cleanupWarning = ` The previous hero image file could not be deleted: ${deletePreviousStorageError.message}`;
+      }
+    }
+
+    setHeroMedia(
+      buildHeroMedia(createdRow, (imagePath) =>
+        supabase.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(imagePath).data.publicUrl,
+      ),
+    );
+    setUploadingHero(false);
+    setHeroBanner({
+      tone: cleanupWarning ? "error" : "success",
+      message: `Hero image ${heroMedia.imagePath ? "updated" : "added"} successfully. The homepage banner will show the new image after refresh.${cleanupWarning}`,
+    });
+  };
+
+  const deleteHeroImage = async () => {
+    if (!heroMedia.imagePath) {
+      return;
+    }
+
+    if (!confirm("Delete the custom hero image? The website will switch back to the default hero image.")) {
+      return;
+    }
+
+    setDeletingHero(true);
+    setHeroBanner(null);
+
+    if (!heroMedia.recordId) {
+      setDeletingHero(false);
+      setHeroBanner({ tone: "error", message: "The saved hero image record could not be found." });
+      return;
+    }
+
+    const imagePathToRemove = heroMedia.imagePath;
+    const { error: deleteRowError } = await supabase.from("gallery_images").delete().eq("id", heroMedia.recordId);
+
+    if (deleteRowError) {
+      setDeletingHero(false);
+      setHeroBanner({ tone: "error", message: deleteRowError.message });
+      return;
+    }
+
+    const { error: removeStorageError } = await supabase.storage
+      .from(SITE_MEDIA_BUCKET)
+      .remove([imagePathToRemove]);
+
+    setHeroMedia(getDefaultHeroMedia());
+    setDeletingHero(false);
+
+    if (removeStorageError) {
+      setHeroBanner({
+        tone: "error",
+        message: `Hero image was reset to the default website image, but the old file could not be deleted from storage: ${removeStorageError.message}`,
+      });
+      return;
+    }
+
+    setHeroBanner({
+      tone: "success",
+      message: "Hero image deleted successfully. The homepage is now using the default hero image again.",
+    });
   };
 
   const uploadRoomImage = async (room: RoomCard, file: File) => {
@@ -487,10 +631,22 @@ function AdminDashboard() {
   const fresh = enquiries.filter((item) => item.status === "new").length;
   const contacted = enquiries.filter((item) => item.status === "contacted").length;
   const closed = enquiries.filter((item) => item.status === "closed").length;
+  const customHeroCount = heroMedia.isDefault ? 0 : 1;
+  const dashboardTabs: Array<{
+    count: number;
+    icon: typeof ImagePlus;
+    key: DashboardPanel;
+    label: string;
+  }> = [
+    { key: "hero", label: "Hero Media", count: customHeroCount, icon: ImagePlus },
+    { key: "rooms", label: "Rooms", count: roomCards.length, icon: BedDouble },
+    { key: "gallery", label: "Gallery", count: galleryItems.length, icon: ImagePlus },
+    { key: "enquiries", label: "Enquiries", count: total, icon: Inbox },
+  ];
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f9fafb_0%,#eef4f8_100%)]">
-      <header className="border-b border-border/70 bg-background/90 backdrop-blur">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#0d0f14_0%,#141821_18rem,#eef4f8_18rem,#eef4f8_100%)]">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0d0f14]/92 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4">
           <div className="flex items-center gap-3">
             <img
@@ -501,20 +657,20 @@ function AdminDashboard() {
               height={312}
             />
             <div>
-              <div className="font-display font-bold">Elite Stay Admin</div>
-              <div className="text-xs text-muted-foreground">Rooms, gallery, and enquiries dashboard</div>
+              <div className="font-display font-bold text-white">Elite Stay Admin</div>
+              <div className="text-xs text-white/55">Hero, rooms, gallery, and enquiries dashboard</div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-sm transition hover:bg-muted"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-sm text-white/84 transition hover:bg-white/8 hover:text-white"
             >
               <HomeIcon className="h-4 w-4" /> View site
             </Link>
             <button
               onClick={signOut}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-sm transition hover:bg-muted"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-2 text-sm text-white/84 transition hover:bg-white/8 hover:text-white"
             >
               <LogOut className="h-4 w-4" /> Sign out
             </button>
@@ -522,39 +678,167 @@ function AdminDashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl space-y-8 px-5 py-8">
-        <section className="overflow-hidden rounded-[2rem] border border-white/60 bg-white/88 px-6 py-7 shadow-[0_24px_60px_rgba(15,85,125,0.08)] backdrop-blur sm:px-8">
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+      <main className="mx-auto max-w-7xl px-5 py-8">
+        <section className="overflow-hidden rounded-[2.4rem] border border-white/10 bg-[linear-gradient(180deg,#101216_0%,#171a21_100%)] px-6 py-7 shadow-[0_30px_80px_rgba(0,0,0,0.28)] sm:px-8 sm:py-9">
+          <div className="max-w-4xl">
             <div>
-              <div className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-primary">
-                Admin overview
+              <div className="inline-flex rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/62">
+                Control center
               </div>
-              <h1 className="mt-4 font-display text-3xl font-bold sm:text-4xl">
-                Manage room photos, gallery photos, and every incoming enquiry.
+              <h1 className="mt-4 font-sans text-5xl font-semibold tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl">
+                Admin Dashboard
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-                Update room category images, add custom gallery photos for the homepage, and review
-                new website enquiries from one place.
-              </p>
-            </div>
-            <div className="rounded-[1.6rem] border border-primary/10 bg-primary/5 p-5">
-              <div className="text-xs uppercase tracking-[0.18em] text-primary/80">Quick note</div>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Room and gallery images are stored in Supabase Storage, while the enquiry list is
-                populated directly from the public website form.
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-white/64 sm:text-base">
+                Hero: {customHeroCount} | Rooms: {roomCards.length} | Gallery: {galleryItems.length} | Enquiries: {total} | New: {fresh}
               </p>
             </div>
           </div>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            {dashboardTabs.map((tab) => {
+              const Icon = tab.icon;
+              const active = activePanel === tab.key;
+
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActivePanel(tab.key)}
+                  className={`inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold transition ${
+                    active
+                      ? "border-transparent bg-[linear-gradient(135deg,#ff7a18_0%,#ff4d6d_100%)] text-white shadow-[0_18px_45px_rgba(255,92,83,0.28)]"
+                      : "border-white/10 bg-white/4 text-white/82 hover:bg-white/8 hover:text-white"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] ${active ? "bg-white/18" : "bg-white/8 text-white/60"}`}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </section>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard icon={Inbox} label="Total Enquiries" value={total} />
-          <StatCard icon={Clock3} label="New" value={fresh} accent />
-          <StatCard icon={Phone} label="Contacted" value={contacted} />
-          <StatCard icon={CheckCircle2} label="Closed" value={closed} />
-        </div>
+        {activePanel === "hero" ? (
+        <section className="mt-8 rounded-[2rem] border border-white/70 bg-white/92 p-6 shadow-[0_24px_60px_rgba(15,85,125,0.08)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="inline-flex rounded-full bg-muted px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Homepage media
+              </div>
+              <h2 className="mt-3 font-display text-2xl font-bold">Hero section image</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
+                Add, replace, or delete the large banner image shown at the top of the homepage.
+                This is the first image visitors see when they open the site.
+              </p>
+            </div>
+            <div className="rounded-full bg-muted px-3 py-2 text-xs text-muted-foreground">
+              {heroMedia.isDefault ? "Using default hero image" : "Custom hero image live"}
+            </div>
+          </div>
 
-        <section className="rounded-[2rem] border border-white/70 bg-white/92 p-6 shadow-[0_24px_60px_rgba(15,85,125,0.08)]">
+          {heroBanner && <BannerCard banner={heroBanner} className="mt-5" />}
+
+          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+            <article className="overflow-hidden rounded-[1.6rem] border border-border/70 bg-background shadow-[var(--shadow-soft)]">
+              <div className="relative h-72 overflow-hidden sm:h-80">
+                <img src={heroMedia.src} alt={heroMedia.alt} className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#102033]/18 via-[#102033]/8 to-[#102033]/55" />
+                <div className="absolute left-4 top-4 inline-flex rounded-full bg-black/60 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white backdrop-blur">
+                  {heroMedia.isDefault ? "Default image" : "Custom image"}
+                </div>
+                <div className="absolute inset-x-4 bottom-4 rounded-[1.15rem] border border-white/12 bg-black/45 px-4 py-3 text-sm text-white/88 backdrop-blur">
+                  Hero section preview
+                </div>
+              </div>
+            </article>
+
+            <div className="rounded-[1.6rem] border border-border/70 bg-background p-5 shadow-[var(--shadow-soft)]">
+              <div className="font-semibold">Homepage first impression</div>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                Use a wide, high-quality landscape photo for the cleanest hero banner result
+                across desktop and mobile.
+              </p>
+
+              <div className="mt-5 space-y-4 rounded-[1.2rem] bg-muted/50 p-4 text-sm">
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                    Current source
+                  </div>
+                  <div className="mt-1 font-medium text-foreground">
+                    {heroMedia.isDefault ? "Bundled website image" : "Custom admin upload"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                    Alt text
+                  </div>
+                  <div className="mt-1 text-foreground">{heroMedia.alt}</div>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <label
+                  className={`inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition ${
+                    uploadingHero || deletingHero
+                      ? "pointer-events-none opacity-60"
+                      : "cursor-pointer hover:scale-[1.01]"
+                  }`}
+                >
+                  {uploadingHero ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : heroMedia.imagePath ? (
+                    <PencilLine className="h-4 w-4" />
+                  ) : (
+                    <ImagePlus className="h-4 w-4" />
+                  )}
+                  {uploadingHero ? "Saving..." : heroMedia.imagePath ? "Edit image" : "Add image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingHero || deletingHero}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) {
+                        void uploadHeroImage(file);
+                      }
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+                {heroMedia.imagePath ? (
+                  <button
+                    type="button"
+                    onClick={() => void deleteHeroImage()}
+                    disabled={uploadingHero || deletingHero}
+                    className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold transition hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-60"
+                  >
+                    {deletingHero ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                    {deletingHero ? "Deleting..." : "Delete image"}
+                  </button>
+                ) : (
+                  <span className="rounded-full bg-muted px-3 py-2 text-xs text-muted-foreground">
+                    No custom image yet
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground">
+                  Wide JPG, PNG, or WebP recommended
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+        ) : null}
+
+        {activePanel === "rooms" ? (
+        <section className="mt-8 rounded-[2rem] border border-white/70 bg-white/92 p-6 shadow-[0_24px_60px_rgba(15,85,125,0.08)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
                <div className="inline-flex rounded-full bg-muted px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -655,8 +939,10 @@ function AdminDashboard() {
             })}
           </div>
         </section>
+        ) : null}
 
-        <section className="rounded-[2rem] border border-white/70 bg-white/92 p-6 shadow-[0_24px_60px_rgba(15,85,125,0.08)]">
+        {activePanel === "gallery" ? (
+        <section className="mt-8 rounded-[2rem] border border-white/70 bg-white/92 p-6 shadow-[0_24px_60px_rgba(15,85,125,0.08)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="inline-flex rounded-full bg-muted px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -745,8 +1031,10 @@ function AdminDashboard() {
             </div>
           )}
         </section>
+        ) : null}
 
-        <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/92 shadow-[0_24px_60px_rgba(15,85,125,0.08)]">
+        {activePanel === "enquiries" ? (
+        <section className="mt-8 overflow-hidden rounded-[2rem] border border-white/70 bg-white/92 shadow-[0_24px_60px_rgba(15,85,125,0.08)]">
           <div className="flex flex-col gap-3 border-b border-border/70 px-6 py-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="inline-flex rounded-full bg-muted px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -823,6 +1111,7 @@ function AdminDashboard() {
             </ul>
           )}
         </section>
+        ) : null}
       </main>
     </div>
   );

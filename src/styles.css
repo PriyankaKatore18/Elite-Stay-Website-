@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui;
-  --font-sans: "Inter", ui-sans-serif, system-ui;
+  --font-display: "Times New Roman", Times, serif;
+  --font-sans: "Verdana", Geneva, sans-serif;
 
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -83,7 +83,7 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); letter-spacing: -0.02em; }
 }
 
 @layer utilities {
@@ -109,6 +109,15 @@
     mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
   }
 
+  .testimonial-copy-clamp {
+    display: -webkit-box;
+    min-height: calc(1.75rem * 7);
+    overflow: hidden;
+    white-space: pre-line;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 7;
+  }
+
   .marquee-track {
     width: max-content;
     animation: marquee-left 28s linear infinite;
@@ -116,6 +125,24 @@
 
   .marquee-track:hover {
     animation-play-state: paused;
+  }
+
+  .amenity-marquee-track {
+    width: max-content;
+    animation: marquee-left 24s linear infinite;
+  }
+
+  .amenity-marquee-track:hover {
+    animation-play-state: paused;
+  }
+}
+
+@media (min-width: 768px) {
+  @layer utilities {
+    .testimonial-copy-clamp {
+      min-height: calc(1.75rem * 8);
+      -webkit-line-clamp: 8;
+    }
   }
 }
 

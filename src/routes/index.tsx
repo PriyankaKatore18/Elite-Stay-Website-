@@ -8,9 +8,9 @@ import {
   Check,
   ChevronDown,
   Droplets,
-  Dumbbell,
   ExternalLink,
   Mail,
+  Menu,
   MapPin,
   Phone,
   Quote,
@@ -19,11 +19,11 @@ import {
   Star,
   WashingMachine,
   Wifi,
+  X,
   Zap,
 } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import aboutBuilding from "@/assets/about-building.png";
-import hero from "@/assets/hero.jpg";
 import siteLogo from "@/assets/logo-mark.png";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -39,6 +39,14 @@ import {
   type RoomCard,
 } from "@/lib/room-config";
 import {
+  buildHeroMedia,
+  filterHomepageGalleryRows,
+  getDefaultHeroMedia,
+  pickHeroMediaRow,
+  SITE_MEDIA_BUCKET,
+  type SiteMediaAsset,
+} from "@/lib/site-media-config";
+import {
   Carousel,
   type CarouselApi,
   CarouselContent,
@@ -50,125 +58,284 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Elite Stay PG - Comfortable and Secure Stay Near MIT Pune" },
+      { title: "Safe & Comfortable PG Near MIT ADT Pune | Elite Stay PG" },
       {
         name: "description",
         content:
-          "Safe, clean, fully furnished PG stay near MIT Pune with Wi-Fi, study space, CCTV security, daily cleaning, and flexible room options.",
+          "Affordable single, twin & triple sharing rooms for students and professionals near MIT Pune with high-speed Wi-Fi, daily cleaning, CCTV security, and power backup.",
       },
-      { property: "og:title", content: "Elite Stay PG" },
+      { property: "og:title", content: "Safe & Comfortable PG Near MIT ADT Pune | Elite Stay PG" },
       {
         property: "og:description",
         content:
-          "Comfortable and secure PG stay for students and professionals with modern rooms and a peaceful environment.",
+          "Student-friendly accommodation near MIT Pune with fully furnished rooms, modern amenities, and a peaceful environment for focused living.",
       },
     ],
   }),
   component: Landing,
 });
 
-const GOOGLE_PLACE_NAME = "ELITE STAY PG SERVICES";
 const CONTACT_ADDRESS = "Chintamani Park, Vishay Company Road, Kadamwak Wasti, Maharashtra 412201";
 const CONTACT_EMAIL = "elitestay.loni@gmail.com";
 const CONTACT_PHONE_DISPLAY = "09553961076";
 const CONTACT_PHONE_RAW = "919553961076";
-const MAP_LAT = "18.4872489";
-const MAP_LNG = "74.0166317";
+const MAP_LAT = "18.4920676";
+const MAP_LNG = "74.0211766";
+const GOOGLE_REVIEWS_URL =
+  "https://www.google.com/maps/place/ELITE+STAY+PG+SERVICES/@18.4920676,74.0211766,17z/data=!4m8!3m7!1s0x3bc2e9001568664b:0xa73c4876566f41fb!8m2!3d18.4920676!4d74.0211766!9m1!1b1!16s%2Fg%2F11xmftx783!18m1!1e1?entry=ttu&g_ep=EgoyMDI2MDUxMS4wIKXMDSoASAFQAw%3D%3D";
 const WHATSAPP = `https://wa.me/${CONTACT_PHONE_RAW}?text=${encodeURIComponent(
   "Hi Elite Stay, I'd like to enquire about a room.",
 )}`;
-const MAP_EMBED = `https://www.google.com/maps?q=${MAP_LAT},${MAP_LNG}&z=15&output=embed`;
-const MAPS_PLACE_URL = "https://maps.app.goo.gl/hUWkxUSNoF2hkoTs5";
+const MAP_EMBED =
+  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3596.594348694596!2d74.02117659999999!3d18.4920676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2e9001568664b%3A0xa73c4876566f41fb!2sELITE%20STAY%20PG%20SERVICES!5e1!3m2!1sen!2sin!4v1778690642439!5m2!1sen!2sin";
 const MAPS_DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&destination=${MAP_LAT},${MAP_LNG}`;
 
 const ABOUT_POINTS = [
-  "Premium boys' accommodation near MIT Pune",
-  "Safe, clean, and peaceful environment for focused living",
-  "Flexible room choices for students and working professionals",
-  "Daily maintenance and modern amenities for stress-free stays",
+  "Near MIT ADT Pune and just 5 mins from MIT.",
+  "Safe, clean, and fully maintained accommodation for students and professionals.",
+  "Affordable single, twin & triple sharing rooms for students and professionals.",
+  "Modern amenities, security, and a peaceful atmosphere for focused living.",
 ];
 
 const FACILITY_ITEMS = [
   {
     icon: Wifi,
     label: "High-Speed Wi-Fi",
-    detail: "Stable internet for classes, work, streaming, and everyday connectivity.",
+    detail: "Reliable internet for study, work, and everyday connectivity.",
     note: "Always connected",
-  },
-  {
-    icon: ShieldCheck,
-    label: "24x7 CCTV Security",
-    detail: "Round-the-clock surveillance helps residents feel safe and protected.",
-    note: "Safety first",
-  },
-  {
-    icon: BedDouble,
-    label: "Fully Furnished Rooms",
-    detail: "Move into rooms that are already set up for comfortable daily living.",
-    note: "Ready to move in",
-  },
-  {
-    icon: BookOpen,
-    label: "Study Space",
-    detail: "Dedicated study-friendly areas support focused learning and remote work.",
-    note: "Made for focus",
   },
   {
     icon: Sparkles,
     label: "Daily Cleaning",
-    detail: "Regular housekeeping helps keep the property clean, fresh, and organized.",
-    note: "Well maintained",
+    detail: "Regular cleaning keeps rooms and common spaces fresh and hygienic.",
+    note: "Clean daily",
+  },
+  {
+    icon: ShieldCheck,
+    label: "CCTV Security",
+    detail: "Round-the-clock security helps maintain a safe living environment.",
+    note: "Secure stay",
   },
   {
     icon: Droplets,
-    label: "24x7 Water",
-    detail: "Reliable water access is available throughout the day for a smoother routine.",
-    note: "Daily comfort",
+    label: "24/7 Water Supply",
+    detail: "Reliable water availability supports a smooth and comfortable routine.",
+    note: "Everyday comfort",
   },
   {
     icon: Zap,
     label: "Power Backup",
-    detail: "Backup support keeps your routine moving during power interruptions.",
-    note: "Uninterrupted stay",
+    detail: "Power backup keeps essentials running during unexpected outages.",
+    note: "No interruptions",
+  },
+  {
+    icon: BookOpen,
+    label: "Study-Friendly Environment",
+    detail: "A calm atmosphere designed for focused study and productive living.",
+    note: "Focused living",
+  },
+  {
+    icon: BedDouble,
+    label: "Fully Furnished Rooms",
+    detail: "Move-in ready rooms designed for comfortable student and professional life.",
+    note: "Ready to move",
+  },
+  {
+    icon: Droplets,
+    label: "RO Drinking Water",
+    detail: "Clean drinking water is available for convenient daily use.",
+    note: "Safe water",
   },
   {
     icon: WashingMachine,
-    label: "Washing Machines",
-    detail: "On-site washing machines make everyday laundry simple and convenient.",
-    note: "Easy upkeep",
+    label: "Laundry Support",
+    detail: "Easy laundry support helps residents manage everyday upkeep.",
+    note: "Simple laundry",
   },
   {
-    icon: Dumbbell,
-    label: "Basic Gym",
-    detail: "A practical workout setup helps residents keep up with their fitness routine.",
-    note: "Stay active",
-  },
-  {
-    icon: Quote,
-    label: "Wardrobe Storage",
-    detail: "Personal wardrobe space keeps clothes and daily essentials neatly organized.",
-    note: "Neat living",
+    icon: MapPin,
+    label: "Parking Facility",
+    detail: "Convenient parking access adds extra comfort for residents and visitors.",
+    note: "Easy access",
   },
 ] as const;
 
-const TRUST_HIGHLIGHTS = [
+const WHY_CHOOSE_ITEMS = [
   {
-    title: "Comfort",
-    text: "Clean, fully furnished rooms designed for focused student and professional living.",
+    icon: ShieldCheck,
+    title: "Safe & Secure",
+    text: "CCTV monitoring and strict safety rules for a secure living environment.",
   },
   {
-    title: "Safety",
-    text: "CCTV monitoring, ID-proof admission, and clear rules support a secure stay.",
+    icon: Sparkles,
+    title: "Clean & Hygienic",
+    text: "Regular cleaning and well-maintained rooms for comfortable living.",
   },
   {
-    title: "Convenience",
-    text: "A peaceful location with easy access to colleges, transport, food outlets, and essentials.",
+    icon: MapPin,
+    title: "Prime Location",
+    text: "Conveniently located near MIT Pune with easy access to transport and essentials.",
   },
   {
-    title: "Fast response",
-    text: "Website enquiries go straight into the admin dashboard so follow-up stays quick and organized.",
+    icon: BookOpen,
+    title: "Peaceful Environment",
+    text: "A calm and focused atmosphere designed for students and professionals.",
   },
 ];
+
+const TESTIMONIALS = [
+  {
+    reviewer: "AlmightY GamerZ",
+    meta: "1 review",
+    date: "2 months ago",
+    text:
+      "Management is very good. You will feel like family here, though you may face mosquitoes in summer, just like any hostel season-wise in Chintamani Park. For service:\n- 24/7 kitchen available\n- Daily basis cleaning\n- 24/7 electricity\n- 24/7 water availability\n- Fridge available\n- Gym available\n- 24/7 CCTV footage\nYou will not usually get a gym and fridge at this price in Chintamani Park. If these things are in your preferences, consider visiting once for a personal experience.",
+  },
+  {
+    reviewer: "Devansh Tripathi",
+    meta: "1 review",
+    date: "2 months ago",
+    text:
+      "I genuinely like the place, with all possible facilities. Also, the distance between my college and this PG is much less compared to other residencies. The best thing about this place is that the price is very affordable and negotiable based on your needs.",
+  },
+  {
+    reviewer: "Topaz",
+    meta: "1 review",
+    date: "2 months ago",
+    text:
+      "Wifi works, it is really close to all necessities and college, hot and cold water are provided, and the rooms are nice and spacious. Overall, a good hostel.",
+  },
+  {
+    reviewer: "Prince Panchal",
+    meta: "2 reviews / 2 photos",
+    date: "2 months ago",
+    text:
+      "I had a great experience in this PG. It gives you every facility like a washing machine, Wi-Fi, and more. The biggest advantage is that it is near the university.",
+  },
+  {
+    reviewer: "RUSHIKESH BHOYAR",
+    meta: "1 review",
+    date: "2 months ago",
+    text:
+      "It is the best PG, with air-conditioned rooms and many other facilities. It also provides a gym.",
+  },
+  {
+    reviewer: "Prachi Bhoyar",
+    meta: "1 review",
+    date: "2 months ago",
+    text:
+      "Elite PG is the best PG in Chintamani Park because it has many facilities compared to other PGs, including a gym.",
+  },
+  {
+    reviewer: "Gaurav Khandelwal",
+    meta: "2 reviews",
+    date: "4 months ago",
+    text: "The services are pretty good, but the location is bad because it is near a cement factory.",
+  },
+  {
+    reviewer: "Dark Evil",
+    meta: "1 review",
+    date: "2 months ago",
+    text: "It feels like home and the owner is a very humble person.",
+  },
+  {
+    reviewer: "YASH LOYA",
+    meta: "2 reviews",
+    date: "2 months ago",
+    text: "Staying here for the last 8 months, I have faced no issues.",
+  },
+  {
+    reviewer: "Krushna Bhujbal",
+    meta: "1 review",
+    date: "4 months ago",
+    text: "Nice PG.",
+  },
+  {
+    reviewer: "Yash Kaushik",
+    meta: "1 review",
+    date: "2 months ago",
+    text:
+      "Good PG and better than most nearby options. The owner is nice and everything is well managed. I have not faced any issues here.",
+  },
+  {
+    reviewer: "mokshi reddy",
+    meta: "",
+    date: "a week ago",
+    text: "",
+  },
+  {
+    reviewer: "Harsh Sharma",
+    meta: "2 reviews",
+    date: "2 months ago",
+    text: "",
+  },
+  {
+    reviewer: "Mohsin Raza",
+    meta: "",
+    date: "3 months ago",
+    text: "",
+  },
+  {
+    reviewer: "Om Kalaskar",
+    meta: "1 photo",
+    date: "4 months ago",
+    text: "",
+  },
+  {
+    reviewer: "Prasad Zarad",
+    meta: "2 reviews / 13 photos",
+    date: "8 months ago",
+    text: "",
+  },
+  {
+    reviewer: "Ankeshwar Yadav",
+    meta: "2 reviews / 1 photo",
+    date: "9 months ago",
+    text: "",
+  },
+  {
+    reviewer: "sai krupa elite pg",
+    meta: "",
+    date: "10 months ago",
+    text: "",
+  },
+  {
+    reviewer: "Avinash Reddy",
+    meta: "Local Guide / 2 reviews / 7 photos",
+    date: "10 months ago",
+    text: "",
+  },
+] as const;
+
+function getTestimonialsPerView(viewportWidth: number) {
+  if (viewportWidth >= 1024) {
+    return 3;
+  }
+
+  if (viewportWidth >= 768) {
+    return 2;
+  }
+
+  return 1;
+}
+
+function chunkTestimonials<T>(items: readonly T[], size: number) {
+  const pages: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    pages.push([...items.slice(index, index + size)]);
+  }
+
+  return pages;
+}
+
+const PRIMARY_NAV_LINKS = [
+  { label: "About", href: "#about" },
+  { label: "Rooms", href: "#rooms" },
+  { label: "Facilities", href: "#facilities" },
+  { label: "Gallery", href: "#gallery" },
+  { label: "Contact", href: "#contact" },
+] as const;
 
 const RULES = [
   {
@@ -209,6 +376,7 @@ const RULES = [
 ];
 
 function Landing() {
+  const [heroMedia, setHeroMedia] = useState<SiteMediaAsset>(() => getDefaultHeroMedia());
   const [rooms, setRooms] = useState<RoomCard[]>(() => getDefaultRoomCards());
   const [galleryImages, setGalleryImages] = useState<GalleryAsset[]>(() => getDefaultGalleryImages());
 
@@ -237,12 +405,19 @@ function Landing() {
       }
 
       if (!galleryResponse.error) {
+        const publicUrlForGallery = (imagePath: string) =>
+          supabase.storage.from(GALLERY_IMAGE_BUCKET).getPublicUrl(imagePath).data.publicUrl;
+
         setGalleryImages([
           ...getDefaultGalleryImages(),
-          ...buildGalleryImages(galleryResponse.data, (imagePath) =>
-            supabase.storage.from(GALLERY_IMAGE_BUCKET).getPublicUrl(imagePath).data.publicUrl,
-          ),
+          ...buildGalleryImages(filterHomepageGalleryRows(galleryResponse.data), publicUrlForGallery),
         ]);
+        setHeroMedia(
+          buildHeroMedia(
+            pickHeroMediaRow(galleryResponse.data),
+            (imagePath) => supabase.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(imagePath).data.publicUrl,
+          ),
+        );
       }
     };
 
@@ -264,25 +439,26 @@ function Landing() {
     ...galleryImages,
     ...roomGalleryImages,
     {
-      id: "hero-image",
-      src: hero,
-      alt: "Elite Stay PG exterior and entrance",
-      imagePath: null,
-      isDefault: true,
+      id: `hero-image-${heroMedia.imagePath ?? "default"}`,
+      src: heroMedia.src,
+      alt: heroMedia.alt,
+      imagePath: heroMedia.imagePath,
+      isDefault: heroMedia.isDefault,
     },
   ]);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
       <Nav />
-      <Hero />
+      <Hero heroImage={heroMedia} />
       <Stats />
       <About images={allGalleryImages} />
       <Rooms rooms={rooms} />
       <Facilities />
+      <WhyChooseUs />
       <Gallery images={allGalleryImages} />
-      <Testimonials />
       <Rules />
+      <Testimonials />
       <Contact roomOptions={rooms.map((room) => room.name)} />
       <Footer />
       <FloatingActions />
@@ -326,48 +502,173 @@ function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 function Nav() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    const onResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#1E3A5F]/96 shadow-sm backdrop-blur">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-5">
-        <a href="#home" className="flex shrink-0 items-center gap-3">
+        <a
+          href="#home"
+          onClick={() => setMobileMenuOpen(false)}
+          className="flex shrink-0 items-center gap-3"
+        >
           <BrandLogo className="h-11 w-11 rounded-2xl shadow-[var(--shadow-soft)] sm:h-12 sm:w-12" />
           <span className="font-display text-xl font-semibold tracking-[0.04em] text-white sm:text-2xl">
             Elite Stay
           </span>
         </a>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:hidden">
           <a
-            href={MAPS_PLACE_URL}
+            href={WHATSAPP}
             target="_blank"
             rel="noreferrer"
-            className="hidden rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white/84 transition hover:bg-white/10 md:inline-flex"
+            aria-label="Chat on WhatsApp"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[var(--shadow-soft)] transition hover:scale-[1.03] hover:bg-[#1fb85a]"
           >
-            View Location
+            <WhatsAppIcon className="h-[18px] w-[18px]" />
+          </a>
+          <button
+            type="button"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav-menu"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/14 bg-white/8 text-white transition hover:bg-white/14"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+
+        <nav aria-label="Primary navigation" className="hidden flex-1 justify-center md:flex">
+          <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/6 p-1">
+            {PRIMARY_NAV_LINKS.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="rounded-full px-3 py-2 text-xs font-medium text-white/84 transition hover:bg-white/10 hover:text-white lg:px-4 lg:text-sm"
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        <div className="hidden shrink-0 items-center gap-3 md:flex">
+          <a
+            href={WHATSAPP}
+            target="_blank"
+            rel="noreferrer"
+            className="hidden h-11 items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2.5 text-xs font-semibold text-white transition hover:scale-[1.02] hover:bg-[#1fb85a] lg:inline-flex xl:px-5 xl:text-sm"
+          >
+            <WhatsAppIcon className="h-4 w-4" /> WhatsApp
           </a>
           <a
             href="#contact-form"
-            className="group inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-5 text-sm font-semibold text-[#1E3A5F] transition hover:scale-[1.02]"
+            className="group inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-4 text-xs font-semibold text-[#1E3A5F] transition hover:scale-[1.02] lg:px-5 lg:text-sm"
           >
             Book Now
             <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
           </a>
         </div>
       </div>
+
+      {mobileMenuOpen ? (
+        <>
+          <button
+            type="button"
+            aria-label="Close navigation menu"
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 top-20 bg-[#0f2238]/52 backdrop-blur-[2px] md:hidden"
+          />
+          <motion.div
+            id="mobile-nav-menu"
+            initial={{ opacity: 0, y: -14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22 }}
+            className="absolute inset-x-4 top-[calc(100%-0.35rem)] rounded-[1.9rem] border border-white/10 bg-[linear-gradient(180deg,#18385b_0%,#122b46_100%)] p-4 shadow-[0_24px_70px_rgba(7,15,27,0.4)] md:hidden"
+          >
+            <div className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/58">
+              Explore Elite Stay
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {PRIMARY_NAV_LINKS.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-[1.15rem] border border-white/8 bg-white/6 px-4 py-3 text-sm font-medium text-white/88 transition hover:bg-white/12"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+              <a
+                href="#contact-form"
+                onClick={() => setMobileMenuOpen(false)}
+                className="inline-flex items-center justify-center gap-2 rounded-[1.2rem] bg-white px-4 py-3 text-sm font-semibold text-[#1E3A5F] transition hover:scale-[1.01]"
+              >
+                Book Now
+                <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href={WHATSAPP}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="inline-flex items-center justify-center gap-2 rounded-[1.2rem] bg-[#25D366] px-4 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] hover:bg-[#1fb85a]"
+              >
+                <WhatsAppIcon className="h-4 w-4" />
+                WhatsApp
+              </a>
+            </div>
+          </motion.div>
+        </>
+      ) : null}
     </header>
   );
 }
 
-function Hero() {
+function Hero({ heroImage }: { heroImage: SiteMediaAsset }) {
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 600], [0, 120]);
 
   return (
-    <section id="home" className="relative min-h-[100svh] w-full overflow-hidden">
+    <section id="home" className="relative min-h-[100svh] w-full scroll-mt-24 overflow-hidden">
       <motion.div style={{ y }} className="absolute inset-0">
         <img
-          src={hero}
-          alt="Elite Stay PG rooms and exterior"
+          src={heroImage.src}
+          alt={heroImage.alt}
           className="h-full w-full object-cover"
           width={1920}
           height={1080}
@@ -383,22 +684,29 @@ function Hero() {
         >
           <span className="glass-dark inline-flex rounded-full px-3 py-1.5 text-xs uppercase tracking-[0.2em] text-white/90">
             <span className="mr-2 h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-            Elite Stay PG
+            Near MIT ADT Pune
           </span>
           <h1 className="mt-6 max-w-4xl font-display text-5xl leading-[1.02] font-bold text-white sm:text-6xl lg:text-7xl">
-            Comfortable & secure PG stay
+            Safe & Comfortable PG
             <br />
-            <span className="text-white/88">for students & professionals</span>
+            <span className="text-white/88">Near MIT Pune</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-white/82">
-            Safe - Clean - Fully Furnished - Peaceful Living Near MIT Pune.
+            Fully furnished single, twin & triple sharing rooms designed for students and working
+            professionals.
+          </p>
+          <p className="mt-5 max-w-2xl text-sm uppercase tracking-[0.2em] text-white/72 sm:text-[0.82rem]">
+            High-Speed Wi-Fi • Daily Cleaning • CCTV Security • Power Backup
           </p>
           <div className="mt-6 flex flex-wrap gap-3 text-sm text-white/70">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5">
-              <MapPin className="h-4 w-4" /> Chintamani Park, Kadamwak Wasti
+              <MapPin className="h-4 w-4" /> Near MIT ADT Pune
             </span>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5">
-              <ShieldCheck className="h-4 w-4" /> 24x7 CCTV security
+              <Star className="h-4 w-4" /> 5 mins from MIT
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5">
+              <BookOpen className="h-4 w-4" /> Student-friendly accommodation near MIT Pune
             </span>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -415,7 +723,15 @@ function Hero() {
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-6 py-3.5 font-semibold text-white shadow-xl transition hover:scale-[1.03] hover:bg-[#1fb85a]"
             >
-              <WhatsAppIcon className="h-5 w-5" /> WhatsApp Enquiry
+              <WhatsAppIcon className="h-5 w-5" />
+              WhatsApp Enquiry
+            </a>
+            <a
+              href="#contact"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/18 bg-white/8 px-6 py-3.5 font-semibold text-white shadow-xl transition hover:scale-[1.03] hover:bg-white/14"
+            >
+              <MapPin className="h-4 w-4" />
+              Schedule a Visit
             </a>
           </div>
         </motion.div>
@@ -436,32 +752,55 @@ function Hero() {
 
 function Stats() {
   const items = [
-    { icon: ShieldCheck, label: "Safe stay", value: "24x7 CCTV" },
-    { icon: Sparkles, label: "Clean living", value: "Daily Care" },
-    { icon: BedDouble, label: "Move-in ready", value: "Furnished" },
-    { icon: MapPin, label: "Well connected", value: "Near MIT Pune" },
+    {
+      icon: MapPin,
+      value: "Near MIT ADT Pune",
+      label: "Student-friendly accommodation near MIT Pune",
+    },
+    { icon: Star, value: "5 mins from MIT", label: "Quick campus access for daily convenience" },
+    { icon: Wifi, value: "High-Speed Wi-Fi", label: "Reliable internet for study and work" },
+    { icon: Sparkles, value: "Daily Cleaning", label: "Clean and fully maintained living spaces" },
+    { icon: ShieldCheck, value: "CCTV Security", label: "Safe and secure PG environment" },
+    { icon: Zap, value: "Power Backup", label: "Comfortable daily living without interruption" },
+    {
+      icon: BedDouble,
+      value: "Sharing Options",
+      label: "Affordable single, twin & triple sharing rooms",
+    },
+    { icon: BookOpen, value: "Study-Friendly", label: "A peaceful environment for focused living" },
   ];
+  const marqueeItems = [...items, ...items];
 
   return (
-    <section className="relative z-20 -mt-12">
-      <div className="mx-auto max-w-7xl px-5">
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {items.map((item, index) => (
-            <motion.div
-              key={item.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.08 }}
-              className="surface-card rounded-2xl p-5"
-            >
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                <item.icon className="h-5 w-5" />
-              </div>
-              <div className="mt-3 font-display text-2xl font-bold">{item.value}</div>
-              <div className="text-sm text-muted-foreground">{item.label}</div>
-            </motion.div>
-          ))}
+    <section className="relative bg-background pb-7 pt-5 sm:pb-8 sm:pt-6">
+      <div className="px-3 sm:px-5 lg:px-6">
+        <div className="relative overflow-hidden rounded-[2.2rem] border border-[#d9e4ee] bg-[linear-gradient(180deg,#f9fbfe_0%,#eef4f9_100%)] px-3 py-3 shadow-[0_24px_70px_-42px_rgba(16,32,51,0.38)] sm:px-4 sm:py-4">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top,_rgba(30,58,95,0.08),_transparent_72%)]" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-14 bg-gradient-to-r from-[#eef4f9] via-[#eef4f9]/94 to-transparent sm:w-18" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-[#eef4f9] via-[#eef4f9]/94 to-transparent sm:w-18" />
+
+          <div className="relative overflow-hidden fade-mask-x">
+            <div className="amenity-marquee-track flex items-stretch gap-3 py-1 sm:gap-4">
+              {marqueeItems.map((item, index) => (
+                <div
+                  key={`${item.value}-${index}`}
+                  className="group flex w-[230px] shrink-0 items-center gap-3 rounded-[1.6rem] border border-[#d7e2ec] bg-white px-4 py-3.5 shadow-[0_14px_32px_-24px_rgba(16,32,51,0.28)] transition duration-300 hover:-translate-y-1 hover:border-primary/16 hover:shadow-[0_20px_44px_-24px_rgba(16,32,51,0.34)] sm:w-[255px] sm:px-5"
+                >
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-[1rem] bg-[linear-gradient(180deg,#edf3f8_0%,#e5edf6_100%)] text-primary ring-1 ring-[#d8e2ec] transition duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
+                    <item.icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-display text-[1.08rem] leading-[1.08] font-bold text-foreground sm:text-[1.18rem]">
+                      {item.value}
+                    </div>
+                    <div className="mt-1.5 line-clamp-2 text-[11px] leading-4.5 text-muted-foreground sm:text-xs">
+                      {item.label}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -472,38 +811,38 @@ function About({ images }: { images: GalleryAsset[] }) {
   const marqueeImages = [...images, ...images];
 
   return (
-    <section id="about" className="relative pb-8 pt-18 sm:pb-10 sm:pt-20">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start lg:gap-14">
+    <section id="about" className="relative scroll-mt-28 pb-8 pt-18 sm:pb-10 sm:pt-20">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-stretch lg:gap-14">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
-          className="min-w-0 max-w-xl lg:flex lg:h-full lg:flex-col"
+          className="min-w-0 max-w-xl rounded-[2rem] border border-border/70 bg-[linear-gradient(180deg,#ffffff_0%,#f5f8fb_100%)] p-6 shadow-[var(--shadow-glow)] sm:p-8 lg:flex lg:h-full lg:max-w-none lg:flex-col lg:gap-7"
         >
-          <SectionLabel>About Elite Stay PG</SectionLabel>
-          <h2 className="mt-4 font-display text-4xl leading-tight font-bold sm:text-5xl">
-            A New Standard for Living.
-          </h2>
-          <p className="mt-5 text-lg leading-8 text-muted-foreground">
-            Welcome to Elite Stay PG, a premium boys' accommodation near MIT Pune, designed for
-            students and working professionals who want comfort, safety, and a peaceful
-            environment to focus on their goals.
-          </p>
-          <p className="mt-4 text-base leading-8 text-muted-foreground">
-            At Elite Stay PG, we believe a hostel should feel like more than just a place to stay.
-            From clean and spacious rooms to daily maintenance and modern amenities, every detail
-            is shaped to create a stress-free and comfortable living experience. With convenient
-            access to colleges, transport, food outlets, and essential services, residents get a
-            balanced mix of comfort, convenience, and affordability.
-          </p>
-          <ul className="mt-8 space-y-3">
+          <div>
+            <SectionLabel>ABOUT ELITE STAY PG</SectionLabel>
+            <h2 className="mt-4 font-display text-4xl leading-tight font-bold sm:text-5xl">
+              A peaceful and student-friendly place to stay
+            </h2>
+            <p className="mt-5 text-justify text-[1.02rem] leading-8 text-muted-foreground sm:text-[1.05rem]">
+              Elite Stay PG offers safe, clean, and fully maintained accommodation near MIT Pune.
+              Designed for students and professionals, our rooms provide a comfortable environment
+              with modern amenities, security, and a peaceful atmosphere for focused living.
+            </p>
+            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.18em] text-primary/75">
+              Everything you need for a secure and comfortable stay
+            </p>
+          </div>
+          <ul className="mt-6 space-y-3 lg:mt-0">
             {ABOUT_POINTS.map((point) => (
               <li key={point} className="flex items-start gap-3">
                 <span className="mt-1 grid h-5 w-5 place-items-center rounded-md bg-primary/10 text-primary">
                   <Check className="h-3.5 w-3.5" />
                 </span>
-                <span className="text-foreground/90">{point}</span>
+                <span className="text-justify text-[1.02rem] leading-7 text-foreground/90 sm:text-[1.05rem]">
+                  {point}
+                </span>
               </li>
             ))}
           </ul>
@@ -514,27 +853,27 @@ function About({ images }: { images: GalleryAsset[] }) {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="min-w-0 overflow-hidden rounded-[2rem] border border-border/80 bg-white/92 p-5 shadow-[var(--shadow-glow)]"
+          className="min-w-0 overflow-hidden rounded-[2rem] border border-border/80 bg-white/92 p-5 shadow-[var(--shadow-glow)] lg:h-full"
         >
-          <div className="flex flex-col rounded-[1.6rem] bg-muted/55 p-5">
-            <div className="relative overflow-hidden rounded-[1.5rem] border border-white/80 bg-white shadow-[var(--shadow-soft)]">
+          <div className="flex h-full flex-col rounded-[1.6rem] bg-muted/55 p-5">
+            <div className="relative overflow-hidden rounded-[1.5rem] border border-white/80 bg-[linear-gradient(180deg,#95b4e6_0%,#d9e6f5_100%)] shadow-[var(--shadow-soft)]">
               <img
                 src={aboutBuilding}
                 alt="Elite Stay building exterior"
-                className="h-56 w-full object-cover sm:h-64 lg:h-72"
+                className="h-[20rem] w-full object-contain object-center sm:h-[24rem] lg:h-[30rem]"
                 loading="lazy"
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#102033]/78 via-[#102033]/38 to-transparent px-5 py-5 text-white">
                 <div className="inline-flex rounded-full bg-white/14 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur">
-                  Elite Stay Exterior
+                  Building exterior
                 </div>
                 <div className="mt-3 max-w-md font-display text-2xl font-bold sm:text-[1.75rem]">
-                  A calm, premium property designed for modern PG living.
+                  Student-friendly accommodation near MIT Pune.
                 </div>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              {["Near MIT Pune", "Move-in ready rooms", "Peaceful daily living"].map((item) => (
+              {["Near MIT ADT Pune", "5 mins from MIT", "Student-friendly living"].map((item) => (
                 <span
                   key={item}
                   className="rounded-full border border-primary/12 bg-white/80 px-3 py-1 text-xs font-medium text-foreground/80 shadow-sm"
@@ -560,10 +899,6 @@ function About({ images }: { images: GalleryAsset[] }) {
                 ))}
               </div>
             </div>
-            <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              Images uploaded from the admin gallery also flow into this moving preview strip
-              automatically.
-            </p>
           </div>
         </motion.div>
       </div>
@@ -646,14 +981,13 @@ function RoomCardCarousel({ room }: { room: RoomCard }) {
 
 function Rooms({ rooms }: { rooms: RoomCard[] }) {
   return (
-    <section id="rooms" className="relative bg-muted/40 pb-14 pt-10 sm:pb-16 sm:pt-12">
+    <section id="rooms" className="relative scroll-mt-28 bg-muted/40 pb-14 pt-10 sm:pb-16 sm:pt-12">
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
-          <SectionLabel>Rooms</SectionLabel>
-          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Choose your stay</h2>
+          <SectionLabel>ROOM OPTIONS</SectionLabel>
+          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Choose your perfect stay</h2>
           <p className="mt-4 text-muted-foreground">
-            Flexible room options for different needs, each designed for practical and comfortable
-            daily living.
+            Affordable single, twin & triple sharing rooms for students and professionals.
           </p>
         </div>
 
@@ -679,6 +1013,7 @@ function Rooms({ rooms }: { rooms: RoomCard[] }) {
                     </div>
                   </div>
                 </div>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{room.description}</p>
                 <ul className="mt-4 space-y-2">
                   {room.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -714,40 +1049,29 @@ function Rooms({ rooms }: { rooms: RoomCard[] }) {
 
 function Facilities() {
   return (
-    <section id="facilities" className="relative overflow-hidden pb-10 pt-12 sm:pb-12 sm:pt-14">
+    <section
+      id="facilities"
+      className="relative scroll-mt-28 overflow-hidden pb-10 pt-12 sm:pb-12 sm:pt-14"
+    >
       <div className="absolute inset-x-0 top-12 -z-10 mx-auto h-72 max-w-5xl rounded-full bg-[radial-gradient(circle,_rgba(30,58,95,0.12),_transparent_68%)] blur-3xl" />
       <div className="absolute left-0 top-1/3 -z-10 h-56 w-56 rounded-full bg-[radial-gradient(circle,_rgba(30,58,95,0.08),_transparent_70%)] blur-3xl" />
 
       <div className="mx-auto max-w-7xl px-5">
         <div className="relative overflow-hidden rounded-[2rem] border border-border/80 bg-white/92 px-6 py-6 shadow-[var(--shadow-glow)] backdrop-blur-sm sm:px-8 sm:py-7 lg:px-10 lg:py-8">
           <div className="absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(circle_at_top_right,_rgba(30,58,95,0.14),_transparent_65%)] lg:block" />
-          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-start lg:gap-8">
-            <div className="max-w-3xl">
-              <SectionLabel>Facilities</SectionLabel>
-              <h2 className="mt-4 font-display text-4xl leading-tight font-bold sm:text-5xl lg:text-6xl">
-                Everything needed for a safe and comfortable stay.
-              </h2>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                Fully furnished rooms with Wi-Fi, study space, wardrobe, daily cleaning, 24x7
-                water, power backup, and CCTV security for a safe and comfortable stay.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              {TRUST_HIGHLIGHTS.slice(0, 3).map((item) => (
-                <div
-                  key={item.title}
-                  className="rounded-2xl border border-white/80 bg-white/78 px-4 py-4 shadow-[var(--shadow-soft)] backdrop-blur-sm"
-                >
-                  <div className="text-sm font-semibold text-foreground">{item.title}</div>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.text}</p>
-                </div>
-              ))}
-            </div>
+          <div className="relative max-w-3xl">
+            <SectionLabel>FACILITIES</SectionLabel>
+            <h2 className="mt-4 font-display text-4xl leading-tight font-bold sm:text-5xl lg:text-6xl">
+              Everything you need for a comfortable stay
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+              High-speed Wi-Fi, daily cleaning, CCTV security, 24/7 water supply, power backup,
+              and other essentials designed for safe, student-friendly living.
+            </p>
           </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {FACILITY_ITEMS.map((item, index) => (
             <motion.div
               key={item.label}
@@ -755,27 +1079,71 @@ function Facilities() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.45, delay: index * 0.05 }}
-              className="group relative overflow-hidden rounded-[1.75rem] border border-border/80 bg-white/95 p-6 shadow-[var(--shadow-soft)] transition-all duration-500 hover:-translate-y-1.5 hover:border-primary/12 hover:shadow-[var(--shadow-glow)]"
+              className="group relative overflow-hidden rounded-[1.7rem] border border-[#d8e2ec] bg-[linear-gradient(160deg,#ffffff_0%,#fbfdff_52%,#eef4f9_100%)] p-5 shadow-[0_18px_38px_-28px_rgba(16,32,51,0.32)] transition-all duration-500 hover:-translate-y-1.5 hover:border-primary/18 hover:shadow-[0_28px_54px_-30px_rgba(16,32,51,0.34)]"
             >
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/85 via-primary/25 to-transparent" />
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/8 blur-2xl transition duration-500 group-hover:bg-primary/14" />
+              <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary/28 to-transparent" />
+              <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,_rgba(30,58,95,0.12),_transparent_68%)] transition duration-500 group-hover:scale-110" />
+              <div className="absolute bottom-0 right-0 h-20 w-20 rounded-tl-[2.5rem] bg-[linear-gradient(135deg,rgba(30,58,95,0.06),rgba(30,58,95,0.01))]" />
 
-              <div className="relative flex h-full flex-col">
+              <div className="relative flex min-h-[220px] flex-col">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10 transition duration-300 group-hover:scale-105 group-hover:bg-primary group-hover:text-primary-foreground">
-                    <item.icon className="h-5 w-5" />
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-11 w-11 place-items-center rounded-[1.1rem] bg-primary text-primary-foreground ring-1 ring-primary/20 shadow-[0_10px_24px_-14px_rgba(16,32,51,0.6)] transition duration-300 group-hover:scale-105">
+                      <item.icon className="h-5 w-5" />
+                    </div>
+                    <span className="rounded-full border border-primary/8 bg-white/78 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/78 backdrop-blur">
+                      Included
+                    </span>
                   </div>
-                  <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Included
-                  </span>
                 </div>
 
-                <h3 className="mt-6 font-display text-xl font-bold text-foreground">{item.label}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.detail}</p>
-                <div className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                  {item.note}
+                <h3 className="mt-4 font-display text-[1.55rem] leading-[1.08] font-bold text-foreground">
+                  {item.label}
+                </h3>
+                <p className="mt-2 line-clamp-3 text-[13.5px] leading-5 text-muted-foreground">
+                  {item.detail}
+                </p>
+                <div className="mt-4 flex items-center gap-3">
+                  <span className="inline-flex rounded-full bg-[#edf4fa] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                    {item.note}
+                  </span>
+                  <span className="h-px flex-1 bg-gradient-to-r from-primary/18 to-transparent" />
                 </div>
               </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WhyChooseUs() {
+  return (
+    <section className="relative py-18 sm:py-20">
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="mx-auto max-w-2xl text-center">
+          <SectionLabel>WHY ELITE STAY PG</SectionLabel>
+          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
+            Trusted by students and parents
+          </h2>
+        </div>
+
+        <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {WHY_CHOOSE_ITEMS.map((item, index) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: index * 0.08 }}
+              className="rounded-[1.8rem] border border-border/80 bg-white p-6 shadow-[var(--shadow-soft)]"
+            >
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
+                <item.icon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 font-display text-2xl font-bold">{item.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.text}</p>
             </motion.div>
           ))}
         </div>
@@ -788,16 +1156,15 @@ function Gallery({ images }: { images: GalleryAsset[] }) {
   const [open, setOpen] = useState<{ src: string; alt: string } | null>(null);
 
   return (
-    <section id="gallery" className="relative bg-muted/40 pb-18 pt-10 sm:pb-20 sm:pt-12">
+    <section id="gallery" className="relative scroll-mt-28 bg-muted/40 pb-18 pt-10 sm:pb-20 sm:pt-12">
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
-          <SectionLabel>Gallery</SectionLabel>
+          <SectionLabel>OUR GALLERY</SectionLabel>
           <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
-            A look around Elite Stay.
+            Take a look inside Elite Stay PG
           </h2>
           <p className="mt-4 text-muted-foreground">
-            All bundled images are shown here, and any gallery image added from the admin panel
-            joins the gallery automatically.
+            Explore our clean rooms, modern facilities, and comfortable living spaces.
           </p>
         </div>
         <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -841,80 +1208,154 @@ function Gallery({ images }: { images: GalleryAsset[] }) {
 }
 
 function Testimonials() {
+  const [api, setApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [snapCount, setSnapCount] = useState(1);
+  const [cardsPerView, setCardsPerView] = useState(1);
+  const testimonialPages = chunkTestimonials(TESTIMONIALS, cardsPerView);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const updateCardsPerView = () => {
+      setCardsPerView((current) => {
+        const next = getTestimonialsPerView(window.innerWidth);
+        return current === next ? current : next;
+      });
+    };
+
+    updateCardsPerView();
+    window.addEventListener("resize", updateCardsPerView);
+
+    return () => {
+      window.removeEventListener("resize", updateCardsPerView);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    const updateCurrentSlide = () => {
+      setCurrentSlide(api.selectedScrollSnap());
+      setSnapCount(api.scrollSnapList().length);
+    };
+
+    updateCurrentSlide();
+    api.on("select", updateCurrentSlide);
+    api.on("reInit", updateCurrentSlide);
+
+    return () => {
+      api.off("select", updateCurrentSlide);
+      api.off("reInit", updateCurrentSlide);
+    };
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      api.scrollNext();
+    }, 4800);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [api]);
+
   return (
     <section id="reviews" className="relative py-18 sm:py-20">
       <div className="mx-auto max-w-7xl px-5">
-        <div className="mx-auto max-w-2xl text-center">
-          <SectionLabel>Testimonials</SectionLabel>
-          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
-            Start with our verified Google listing.
-          </h2>
-          <p className="mt-4 text-muted-foreground">
-            The exact Elite Stay PG Services map listing is connected below so visitors can open
-            directions and read the latest Google reviews directly on Google Maps.
-          </p>
+        <div className="mx-auto flex max-w-5xl flex-col gap-5 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
+          <div className="mx-auto max-w-2xl sm:mx-0">
+            <SectionLabel>TESTIMONIALS</SectionLabel>
+            <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
+              What our residents say
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              Real feedback from students and professionals staying at Elite Stay.
+            </p>
+          </div>
+          <a
+            href={GOOGLE_REVIEWS_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 self-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:scale-[1.02] sm:self-auto"
+          >
+            View All Reviews
+            <ExternalLink className="h-4 w-4" />
+          </a>
         </div>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="rounded-[2rem] bg-[#1E3A5F] p-8 text-white shadow-[0_28px_70px_rgba(30,58,95,0.24)]"
+        <div className="relative mt-10 px-2 sm:px-12">
+          <Carousel
+            key={`testimonial-pages-${cardsPerView}`}
+            setApi={setApi}
+            opts={{ align: "start", loop: testimonialPages.length > 1 }}
           >
-            <div className="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/85">
-              Google Maps verified location
-            </div>
-            <div className="mt-6 flex items-center gap-1 text-[#FFD166]">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Star key={index} className="h-5 w-5 fill-current" />
+            <CarouselContent>
+              {testimonialPages.map((page, pageIndex) => (
+                <CarouselItem key={`testimonial-page-${pageIndex}`}>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {page.map((testimonial, cardIndex) => (
+                      <motion.div
+                        key={`${testimonial.reviewer}-${testimonial.date}-${cardIndex}`}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{
+                          duration: 0.5,
+                          delay: (pageIndex * cardsPerView + cardIndex) * 0.05,
+                        }}
+                        className="flex h-full min-h-[24rem] flex-col rounded-[1.8rem] border border-border/80 bg-white p-6 shadow-[var(--shadow-soft)] sm:min-h-[25rem]"
+                      >
+                        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
+                          <Quote className="h-5 w-5" />
+                        </div>
+                        <div className="mt-5 flex items-center gap-1 text-[#D4A373]">
+                          {Array.from({ length: 5 }).map((_, starIndex) => (
+                            <Star key={starIndex} className="h-5 w-5 fill-current" />
+                          ))}
+                        </div>
+                        <p className="testimonial-copy-clamp mt-4 text-sm leading-7 text-muted-foreground">
+                          "
+                          {testimonial.text || "Shared a 5-star rating on Google."}
+                          "
+                        </p>
+                        <div className="mt-auto border-t border-border/70 pt-4">
+                          <div className="min-h-7 font-semibold text-foreground">
+                            {testimonial.reviewer}
+                          </div>
+                          <div className="mt-1 min-h-10 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                            {[testimonial.meta, testimonial.date].filter(Boolean).join(" / ")}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CarouselItem>
               ))}
-            </div>
-            <h3 className="mt-4 font-display text-3xl font-bold">{GOOGLE_PLACE_NAME}</h3>
-            <p className="mt-3 max-w-xl text-white/78">{CONTACT_ADDRESS}</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a
-                href={MAPS_PLACE_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#1E3A5F] transition hover:scale-[1.02]"
-              >
-                Read reviews on Google
-                <ExternalLink className="h-4 w-4" />
-              </a>
-              <a
-                href={MAPS_DIRECTIONS_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/18 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                Get directions
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
-            <p className="mt-6 text-sm leading-7 text-white/72">
-              Live Google review text is best opened directly from Google Maps, so this section
-              links to the verified review page instead of showing unstable copied snippets.
-            </p>
-          </motion.div>
+            </CarouselContent>
+            <CarouselPrevious className="left-0 h-11 w-11 border border-border bg-white text-foreground shadow-[var(--shadow-soft)] hover:bg-muted sm:-left-4" />
+            <CarouselNext className="right-0 h-11 w-11 border border-border bg-white text-foreground shadow-[var(--shadow-soft)] hover:bg-muted sm:-right-4" />
+          </Carousel>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {TRUST_HIGHLIGHTS.map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.45, delay: index * 0.08 }}
-                className="rounded-[1.6rem] border border-border/80 bg-white p-6 shadow-[var(--shadow-soft)]"
-              >
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary">
-                  <Quote className="h-5 w-5" />
-                </div>
-                <h3 className="mt-4 font-display text-xl font-bold">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.text}</p>
-              </motion.div>
+          <div className="mt-6 flex items-center justify-center gap-2">
+            {Array.from({ length: snapCount }).map((_, index) => (
+              <button
+                key={`testimonial-dot-${index}`}
+                type="button"
+                onClick={() => api?.scrollTo(index)}
+                aria-label={`Go to testimonial ${index + 1}`}
+                className={`h-2.5 rounded-full transition-all ${
+                  currentSlide === index ? "w-8 bg-primary" : "w-2.5 bg-primary/25"
+                }`}
+              />
             ))}
           </div>
         </div>
@@ -930,13 +1371,12 @@ function Rules() {
     <section id="rules" className="relative bg-muted/40 py-18 sm:py-20">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-5">
         <div className="lg:col-span-2">
-          <SectionLabel>Rules & Regulations</SectionLabel>
+          <SectionLabel>HOUSE RULES</SectionLabel>
           <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
-            Clear policies for peaceful living.
+            Calm, safe & well-managed living
           </h2>
           <p className="mt-4 text-muted-foreground">
-            These simple rules help keep Elite Stay safe, organized, and comfortable for every
-            resident.
+            Simple rules to ensure a peaceful and comfortable stay for everyone.
           </p>
 
           <div className="mt-8 rounded-3xl surface-card p-6">
@@ -955,12 +1395,10 @@ function Rules() {
               </div>
             </div>
             <a
-              href={MAPS_PLACE_URL}
-              target="_blank"
-              rel="noreferrer"
+              href="#visit-map"
               className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:gap-3"
             >
-              Open exact Google Maps location
+              View location map on site
               <ExternalLink className="h-4 w-4" />
             </a>
           </div>
@@ -1030,13 +1468,14 @@ function Contact({ roomOptions }: { roomOptions: string[] }) {
   };
 
   return (
-    <section id="contact" className="relative pb-20 pt-18 sm:pb-22 sm:pt-20">
+    <section id="contact" className="relative scroll-mt-28 pb-20 pt-18 sm:pb-22 sm:pt-20">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-2">
         <div>
-          <SectionLabel>Contact</SectionLabel>
-          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Book your stay.</h2>
+          <SectionLabel>CONTACT US</SectionLabel>
+          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Book your stay today</h2>
           <p className="mt-4 text-muted-foreground">
-            Reach out for availability, pricing, a visit, or any quick questions about the PG.
+            Looking for a safe and comfortable PG near MIT Pune? Contact us for room availability
+            and bookings.
           </p>
 
           <div className="mt-8 space-y-4">
@@ -1047,25 +1486,29 @@ function Contact({ roomOptions }: { roomOptions: string[] }) {
 
           <div className="mt-8 flex flex-wrap gap-3">
             <a
+              href={`tel:+${CONTACT_PHONE_RAW}`}
+              className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition hover:scale-[1.03]"
+            >
+              <Phone className="h-5 w-5" /> Call Now
+            </a>
+            <a
               href={WHATSAPP}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-5 py-3 font-semibold text-white shadow-[var(--shadow-soft)] transition hover:scale-[1.03] hover:bg-[#1fb85a]"
             >
-              <WhatsAppIcon className="h-5 w-5" /> Chat on WhatsApp
+              <WhatsAppIcon className="h-5 w-5" /> WhatsApp Enquiry
             </a>
             <a
-              href={MAPS_DIRECTIONS_URL}
-              target="_blank"
-              rel="noreferrer"
+              href="#visit-map"
               className="inline-flex items-center gap-2 rounded-2xl border border-border bg-white px-5 py-3 font-semibold text-foreground transition hover:scale-[1.03]"
             >
-              Get Directions
-              <ExternalLink className="h-4 w-4" />
+              <MapPin className="h-4 w-4" />
+              Get Location
             </a>
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-3xl surface-card">
+          <div id="visit-map" className="mt-8 scroll-mt-28 overflow-hidden rounded-3xl surface-card">
             <iframe
               title="Elite Stay location map"
               src={MAP_EMBED}
@@ -1185,7 +1628,7 @@ function ContactRow({
 }) {
   return (
     <div className="flex items-start gap-4 rounded-2xl surface-card p-4">
-      <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
+      <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
         <Icon className="h-5 w-5" />
       </div>
       <div>
@@ -1202,35 +1645,26 @@ function Footer() {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-[1.25fr_0.75fr_1fr]">
         <div>
           <BrandLogo className="h-14 w-14 rounded-[1.2rem] shadow-[0_18px_40px_rgba(0,0,0,0.18)]" />
+          <div className="mt-4 font-display text-2xl font-bold">Elite Stay PG</div>
           <p className="mt-4 max-w-sm text-sm leading-7 text-white/78">
-            Comfortable and secure PG stay for students and professionals with peaceful living,
-            modern rooms, and responsive support.
+            Safe • Comfortable • Student-Friendly Living Near MIT Pune
           </p>
         </div>
-        <FooterCol
-          title="Explore"
-          links={[
-            { label: "About", href: "#about" },
-            { label: "Rooms", href: "#rooms" },
-            { label: "Facilities", href: "#facilities" },
-            { label: "Gallery", href: "#gallery" },
-            { label: "Rules", href: "#rules" },
-          ]}
-        />
+        <FooterCol title="Explore" links={[...PRIMARY_NAV_LINKS]} />
         <FooterCol
           title="Contact"
           links={[
             { label: CONTACT_PHONE_DISPLAY, href: `tel:+${CONTACT_PHONE_RAW}` },
             { label: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
-            { label: "Google Maps", href: MAPS_PLACE_URL, external: true },
+            { label: "Get Location", href: "#visit-map" },
             { label: "Get Directions", href: MAPS_DIRECTIONS_URL, external: true },
           ]}
         />
       </div>
       <div className="border-t border-white/12">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-5 py-5 text-xs text-white/68 sm:flex-row">
-          <div>(c) {new Date().getFullYear()} Elite Stay PG Services. All rights reserved.</div>
-          <div>Comfort - Safety - Convenience.</div>
+          <div>© {new Date().getFullYear()} Elite Stay PG. All rights reserved.</div>
+          <div>Safe • Comfortable • Student-Friendly Living Near MIT Pune</div>
         </div>
       </div>
     </footer>
