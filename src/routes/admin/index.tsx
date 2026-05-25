@@ -27,6 +27,7 @@ import {
 import {
   buildRoomCards,
   getDefaultRoomCards,
+  MAX_ROOM_IMAGES,
   ROOM_IMAGE_BUCKET,
   type RoomCard,
 } from "@/lib/room-config";
@@ -63,6 +64,10 @@ function formatDashboardErrorMessage(message: string) {
   return message;
 }
 
+function getRoomSlotKey(slug: string, slotIndex: number) {
+  return `${slug}:${slotIndex}`;
+}
+
 function AdminDashboard() {
   const nav = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -78,9 +83,9 @@ function AdminDashboard() {
   const [roomBanner, setRoomBanner] = useState<Banner | null>(null);
   const [galleryBanner, setGalleryBanner] = useState<Banner | null>(null);
   const [uploadingHero, setUploadingHero] = useState(false);
-  const [uploadingSlug, setUploadingSlug] = useState<string | null>(null);
+  const [uploadingRoomSlotKey, setUploadingRoomSlotKey] = useState<string | null>(null);
   const [deletingHero, setDeletingHero] = useState(false);
-  const [deletingRoomSlug, setDeletingRoomSlug] = useState<string | null>(null);
+  const [deletingRoomSlotKey, setDeletingRoomSlotKey] = useState<string | null>(null);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [deletingGalleryId, setDeletingGalleryId] = useState<string | null>(null);
 
@@ -136,7 +141,7 @@ function AdminDashboard() {
 
       const [enquiryResponse, roomResponse, galleryResponse] = await Promise.all([
         supabase.from("enquiries").select("*").order("created_at", { ascending: false }),
-        supabase.from("room_categories").select("slug, image_path"),
+        supabase.from("room_categories").select("slug, image_path, image_paths"),
         supabase
           .from("gallery_images")
           .select("id, image_path, alt_text, created_at")
@@ -352,111 +357,147 @@ function AdminDashboard() {
     });
   };
 
-  const uploadRoomImage = async (room: RoomCard, file: File) => {
+  const updateRoomCardImagePaths = (slug: RoomCard["slug"], imagePaths: string[]) => {
+    const normalizedPaths = imagePaths.filter(Boolean).slice(0, MAX_ROOM_IMAGES);
+    const customImages = normalizedPaths.map(
+      (path) => supabase.storage.from(ROOM_IMAGE_BUCKET).getPublicUrl(path).data.publicUrl,
+    );
+
+    setRoomCards((current) =>
+      current.map((item) => {
+        if (item.slug !== slug) {
+          return item;
+        }
+
+        const fallbackRoom = getDefaultRoomCards().find((fallback) => fallback.slug === slug);
+        const fallbackImages = fallbackRoom?.images ?? item.images;
+        const images = customImages.length > 0 ? customImages : fallbackImages;
+
+        return {
+          ...item,
+          img: images[0] ?? item.img,
+          images,
+          imagePath: normalizedPaths[0] ?? null,
+          imagePaths: normalizedPaths,
+          customImages,
+        };
+      }),
+    );
+  };
+
+  const uploadRoomImage = async (room: RoomCard, slotIndex: number, file: File) => {
+    if (slotIndex < 0 || slotIndex >= MAX_ROOM_IMAGES) {
+      setRoomBanner({ tone: "error", message: "Please choose a valid room image slot." });
+      return;
+    }
+
     if (!file.type.startsWith("image/")) {
       setRoomBanner({ tone: "error", message: "Please choose a valid image file." });
       return;
     }
 
-    setUploadingSlug(room.slug);
+    const slotKey = getRoomSlotKey(room.slug, slotIndex);
+    setUploadingRoomSlotKey(slotKey);
     setRoomBanner(null);
 
     const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const fileBaseName = normalizeFileBaseName(file.name, "room");
-    const filePath = `${room.slug}/${fileBaseName}-${Date.now()}.${extension}`;
+    const filePath = `${room.slug}/slot-${slotIndex + 1}-${fileBaseName}-${Date.now()}.${extension}`;
 
     const { error: uploadError } = await supabase.storage
       .from(ROOM_IMAGE_BUCKET)
       .upload(filePath, file, { cacheControl: "3600", upsert: false });
 
     if (uploadError) {
-      setUploadingSlug(null);
+      setUploadingRoomSlotKey(null);
       setRoomBanner({ tone: "error", message: uploadError.message });
       return;
     }
+
+    const nextImagePaths = [...room.imagePaths];
+    const replacedImagePath = nextImagePaths[slotIndex] ?? null;
+    nextImagePaths[slotIndex] = filePath;
+    const imagePathsForSave = nextImagePaths.filter(Boolean).slice(0, MAX_ROOM_IMAGES);
 
     const { error: saveError } = await supabase.from("room_categories").upsert(
       {
         slug: room.slug,
         name: room.name,
-        image_path: filePath,
+        image_path: imagePathsForSave[0] ?? null,
+        image_paths: imagePathsForSave,
       },
       { onConflict: "slug" },
     );
 
     if (saveError) {
       await supabase.storage.from(ROOM_IMAGE_BUCKET).remove([filePath]);
-      setUploadingSlug(null);
+      setUploadingRoomSlotKey(null);
       setRoomBanner({ tone: "error", message: saveError.message });
       return;
     }
 
-    if (room.imagePath) {
-      await supabase.storage.from(ROOM_IMAGE_BUCKET).remove([room.imagePath]);
+    if (replacedImagePath && replacedImagePath !== filePath) {
+      await supabase.storage.from(ROOM_IMAGE_BUCKET).remove([replacedImagePath]);
     }
 
-    const publicUrl = supabase.storage.from(ROOM_IMAGE_BUCKET).getPublicUrl(filePath).data.publicUrl;
-
-    setRoomCards((current) =>
-      current.map((item) =>
-        item.slug === room.slug ? { ...item, img: publicUrl, imagePath: filePath } : item,
-      ),
-    );
-    setUploadingSlug(null);
+    updateRoomCardImagePaths(room.slug, imagePathsForSave);
+    setUploadingRoomSlotKey(null);
     setRoomBanner({
       tone: "success",
-      message: `${room.name} image ${room.imagePath ? "updated" : "added"} successfully. The homepage will show the new photo after refresh.`,
+      message: `${room.name} image ${replacedImagePath ? "updated" : "added"} in slot ${slotIndex + 1}.`,
     });
   };
 
-  const deleteRoomImage = async (room: RoomCard) => {
-    if (!room.imagePath) {
+  const deleteRoomImage = async (room: RoomCard, slotIndex: number) => {
+    if (slotIndex < 0 || slotIndex >= MAX_ROOM_IMAGES) {
       return;
     }
 
-    if (!confirm(`Delete the custom image for ${room.name}? The website will switch back to the default image.`)) {
+    const imagePathToRemove = room.imagePaths[slotIndex];
+
+    if (!imagePathToRemove) {
       return;
     }
 
-    setDeletingRoomSlug(room.slug);
+    if (!confirm(`Delete ${room.name} image in slot ${slotIndex + 1}?`)) {
+      return;
+    }
+
+    const slotKey = getRoomSlotKey(room.slug, slotIndex);
+    setDeletingRoomSlotKey(slotKey);
     setRoomBanner(null);
 
-    const defaultRoomImage =
-      getDefaultRoomCards().find((item) => item.slug === room.slug)?.img ?? room.img;
+    const nextImagePaths = room.imagePaths.filter((_, index) => index !== slotIndex);
 
     const { error: saveError } = await supabase
       .from("room_categories")
-      .update({ image_path: null })
+      .update({ image_path: nextImagePaths[0] ?? null, image_paths: nextImagePaths })
       .eq("slug", room.slug);
 
     if (saveError) {
-      setDeletingRoomSlug(null);
+      setDeletingRoomSlotKey(null);
       setRoomBanner({ tone: "error", message: saveError.message });
       return;
     }
 
     const { error: removeStorageError } = await supabase.storage
       .from(ROOM_IMAGE_BUCKET)
-      .remove([room.imagePath]);
+      .remove([imagePathToRemove]);
 
-    setRoomCards((current) =>
-      current.map((item) =>
-        item.slug === room.slug ? { ...item, img: defaultRoomImage, imagePath: null } : item,
-      ),
-    );
-    setDeletingRoomSlug(null);
+    updateRoomCardImagePaths(room.slug, nextImagePaths);
+    setDeletingRoomSlotKey(null);
 
     if (removeStorageError) {
       setRoomBanner({
         tone: "error",
-        message: `${room.name} image was reset to the default website image, but the old file could not be deleted from storage: ${removeStorageError.message}`,
+        message: `${room.name} slot ${slotIndex + 1} was cleared, but the old file could not be deleted from storage: ${removeStorageError.message}`,
       });
       return;
     }
 
     setRoomBanner({
       tone: "success",
-      message: `${room.name} image deleted successfully. The website is now using the default room image again.`,
+      message: `${room.name} image removed from slot ${slotIndex + 1}.`,
     });
   };
 
@@ -846,8 +887,9 @@ function AdminDashboard() {
                </div>
                <h2 className="mt-3 font-display text-2xl font-bold">Room image manager</h2>
                <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
-                Add, replace, or delete a custom image for each room category below. The public
-                room cards on the homepage will use these images automatically.
+                Add, replace, or delete up to {MAX_ROOM_IMAGES} custom images for each room
+                category below. The public room cards on the homepage will use these images
+                automatically.
                </p>
              </div>
             <div className="rounded-full bg-muted px-3 py-2 text-xs text-muted-foreground">
@@ -859,9 +901,9 @@ function AdminDashboard() {
 
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {roomCards.map((room) => {
-              const isUploading = uploadingSlug === room.slug;
-              const isDeleting = deletingRoomSlug === room.slug;
-              const isBusy = isUploading || isDeleting;
+              const roomIsBusy =
+                uploadingRoomSlotKey?.startsWith(`${room.slug}:`) ||
+                deletingRoomSlotKey?.startsWith(`${room.slug}:`);
 
               return (
                 <article
@@ -880,59 +922,96 @@ function AdminDashboard() {
                       <span className="font-semibold">{room.name}</span>
                     </div>
                     <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                      {room.imagePath
-                        ? "Custom image is live for this category."
+                      {room.imagePaths.length > 0
+                        ? `${room.imagePaths.length} custom room image${room.imagePaths.length === 1 ? "" : "s"} currently live.`
                         : "Default website image is being used right now."}
                     </p>
-                    <div className="mt-5 flex flex-wrap items-center gap-3">
-                      <label
-                        className={`inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition ${
-                          isBusy ? "pointer-events-none opacity-60" : "cursor-pointer hover:scale-[1.01]"
-                        }`}
-                      >
-                        {isUploading ? (
-                          <LoaderCircle className="h-4 w-4 animate-spin" />
-                        ) : room.imagePath ? (
-                          <PencilLine className="h-4 w-4" />
-                        ) : (
-                          <ImagePlus className="h-4 w-4" />
-                        )}
-                        {isUploading ? "Saving..." : room.imagePath ? "Edit image" : "Add image"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          disabled={isBusy}
-                          onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            if (file) {
-                              void uploadRoomImage(room, file);
-                            }
-                            event.target.value = "";
-                          }}
-                        />
-                      </label>
-                      {room.imagePath ? (
-                        <button
-                          type="button"
-                          onClick={() => void deleteRoomImage(room)}
-                          disabled={isBusy}
-                          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold transition hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-60"
-                        >
-                          {isDeleting ? (
-                            <LoaderCircle className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                          {isDeleting ? "Deleting..." : "Delete image"}
-                        </button>
-                      ) : (
-                        <span className="rounded-full bg-muted px-3 py-2 text-xs text-muted-foreground">
-                          No custom image yet
-                        </span>
-                      )}
-                      <span className="text-xs text-muted-foreground">JPG, PNG, or WebP</span>
+                    <div className="mt-5 grid grid-cols-1 gap-3">
+                      {Array.from({ length: MAX_ROOM_IMAGES }).map((_, slotIndex) => {
+                        const slotKey = getRoomSlotKey(room.slug, slotIndex);
+                        const slotPath = room.imagePaths[slotIndex] ?? null;
+                        const slotImage = room.customImages[slotIndex] ?? null;
+                        const isUploading = uploadingRoomSlotKey === slotKey;
+                        const isDeleting = deletingRoomSlotKey === slotKey;
+                        const slotIsBusy = isUploading || isDeleting || !!roomIsBusy;
+
+                        return (
+                          <div
+                            key={slotKey}
+                            className="rounded-2xl border border-border/70 bg-muted/20 p-3"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="h-14 w-20 overflow-hidden rounded-xl border border-border/60 bg-muted">
+                                {slotImage ? (
+                                  <img
+                                    src={slotImage}
+                                    alt={`${room.name} room slot ${slotIndex + 1}`}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="grid h-full w-full place-items-center text-[11px] text-muted-foreground">
+                                    Empty
+                                  </div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                  Image slot {slotIndex + 1}
+                                </div>
+                                <div className="text-sm">
+                                  {slotPath ? "Custom image live" : "No image in this slot"}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                              <label
+                                className={`inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition ${
+                                  slotIsBusy ? "pointer-events-none opacity-60" : "cursor-pointer hover:scale-[1.01]"
+                                }`}
+                              >
+                                {isUploading ? (
+                                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                                ) : slotPath ? (
+                                  <PencilLine className="h-3.5 w-3.5" />
+                                ) : (
+                                  <ImagePlus className="h-3.5 w-3.5" />
+                                )}
+                                {isUploading ? "Saving..." : slotPath ? "Replace" : "Add"}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  disabled={slotIsBusy}
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0];
+                                    if (file) {
+                                      void uploadRoomImage(room, slotIndex, file);
+                                    }
+                                    event.target.value = "";
+                                  }}
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => void deleteRoomImage(room, slotIndex)}
+                                disabled={slotIsBusy || !slotPath}
+                                className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-semibold transition hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-60"
+                              >
+                                {isDeleting ? (
+                                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                )}
+                                {isDeleting ? "Deleting..." : "Delete"}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
+                    <span className="mt-4 block text-xs text-muted-foreground">
+                      Upload JPG, PNG, or WebP files. Maximum {MAX_ROOM_IMAGES} images per room.
+                    </span>
                   </div>
                 </article>
               );

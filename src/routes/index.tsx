@@ -9,6 +9,8 @@ import {
   ChevronDown,
   Droplets,
   ExternalLink,
+  Facebook,
+  Instagram,
   Mail,
   Menu,
   MapPin,
@@ -385,7 +387,7 @@ function Landing() {
 
     const loadHomepageContent = async () => {
       const [roomResponse, galleryResponse] = await Promise.all([
-        supabase.from("room_categories").select("slug, image_path"),
+        supabase.from("room_categories").select("slug, image_path, image_paths"),
         supabase
           .from("gallery_images")
           .select("id, image_path, alt_text, created_at")
@@ -452,13 +454,13 @@ function Landing() {
       <Nav />
       <Hero heroImage={heroMedia} />
       <Stats />
-      <About images={allGalleryImages} />
-      <Rooms rooms={rooms} />
       <Facilities />
-      <WhyChooseUs />
       <Gallery images={allGalleryImages} />
-      <Rules />
+      <About images={allGalleryImages} />
       <Testimonials />
+      <Rooms rooms={rooms} />
+      <WhyChooseUs />
+      <Rules />
       <Contact roomOptions={rooms.map((room) => room.name)} />
       <Footer />
       <FloatingActions />
@@ -674,6 +676,7 @@ function Hero({ heroImage }: { heroImage: SiteMediaAsset }) {
           height={1080}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#102033]/72 via-[#102033]/56 to-[#102033]/80" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(140%_120%_at_50%_100%,rgba(186,212,245,0.4)_0%,rgba(186,212,245,0)_62%),linear-gradient(0deg,rgba(240,246,255,0.92)_0%,rgba(240,246,255,0)_88%)]" />
       </motion.div>
 
       <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-center px-5 pb-24 pt-44">
@@ -772,9 +775,9 @@ function Stats() {
   const marqueeItems = [...items, ...items];
 
   return (
-    <section className="relative bg-background pb-7 pt-5 sm:pb-8 sm:pt-6">
+    <section className="section-bg-soft-blue relative pb-7 pt-5 sm:pb-8 sm:pt-6">
       <div className="px-3 sm:px-5 lg:px-6">
-        <div className="relative overflow-hidden rounded-[2.2rem] border border-[#d9e4ee] bg-[linear-gradient(180deg,#f9fbfe_0%,#eef4f9_100%)] px-3 py-3 shadow-[0_24px_70px_-42px_rgba(16,32,51,0.38)] sm:px-4 sm:py-4">
+        <div className="section-bg-light-wave relative overflow-hidden rounded-[2.2rem] border border-[#d9e4ee] px-3 py-3 shadow-[0_24px_70px_-42px_rgba(16,32,51,0.38)] sm:px-4 sm:py-4">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top,_rgba(30,58,95,0.08),_transparent_72%)]" />
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-14 bg-gradient-to-r from-[#eef4f9] via-[#eef4f9]/94 to-transparent sm:w-18" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-[#eef4f9] via-[#eef4f9]/94 to-transparent sm:w-18" />
@@ -811,7 +814,7 @@ function About({ images }: { images: GalleryAsset[] }) {
   const marqueeImages = [...images, ...images];
 
   return (
-    <section id="about" className="relative scroll-mt-28 pb-8 pt-18 sm:pb-10 sm:pt-20">
+    <section id="about" className="section-bg-dot-light relative scroll-mt-28 pb-8 pt-18 sm:pb-10 sm:pt-20">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-stretch lg:gap-14">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -981,7 +984,10 @@ function RoomCardCarousel({ room }: { room: RoomCard }) {
 
 function Rooms({ rooms }: { rooms: RoomCard[] }) {
   return (
-    <section id="rooms" className="relative scroll-mt-28 bg-muted/40 pb-14 pt-10 sm:pb-16 sm:pt-12">
+    <section
+      id="rooms"
+      className="section-bg-soft-blue relative scroll-mt-28 pb-14 pt-10 sm:pb-16 sm:pt-12"
+    >
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
           <SectionLabel>ROOM OPTIONS</SectionLabel>
@@ -1051,7 +1057,7 @@ function Facilities() {
   return (
     <section
       id="facilities"
-      className="relative scroll-mt-28 overflow-hidden pb-10 pt-12 sm:pb-12 sm:pt-14"
+      className="section-bg-light-wave relative scroll-mt-28 overflow-hidden pb-10 pt-12 sm:pb-12 sm:pt-14"
     >
       <div className="absolute inset-x-0 top-12 -z-10 mx-auto h-72 max-w-5xl rounded-full bg-[radial-gradient(circle,_rgba(30,58,95,0.12),_transparent_68%)] blur-3xl" />
       <div className="absolute left-0 top-1/3 -z-10 h-56 w-56 rounded-full bg-[radial-gradient(circle,_rgba(30,58,95,0.08),_transparent_70%)] blur-3xl" />
@@ -1120,7 +1126,7 @@ function Facilities() {
 
 function WhyChooseUs() {
   return (
-    <section className="relative py-18 sm:py-20">
+    <section className="section-bg-soft-blue relative py-18 sm:py-20">
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
           <SectionLabel>WHY ELITE STAY PG</SectionLabel>
@@ -1156,14 +1162,14 @@ function Gallery({ images }: { images: GalleryAsset[] }) {
   const [open, setOpen] = useState<{ src: string; alt: string } | null>(null);
 
   return (
-    <section id="gallery" className="relative scroll-mt-28 bg-muted/40 pb-18 pt-10 sm:pb-20 sm:pt-12">
+    <section id="gallery" className="section-bg-navy relative scroll-mt-28 pb-18 pt-10 sm:pb-20 sm:pt-12">
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
-          <SectionLabel>OUR GALLERY</SectionLabel>
-          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
+          <SectionLabel tone="light">OUR GALLERY</SectionLabel>
+          <h2 className="mt-3 font-display text-4xl font-bold text-white sm:text-5xl">
             Take a look inside Elite Stay PG
           </h2>
-          <p className="mt-4 text-muted-foreground">
+          <p className="mt-4 text-white/78">
             Explore our clean rooms, modern facilities, and comfortable living spaces.
           </p>
         </div>
@@ -1177,7 +1183,7 @@ function Gallery({ images }: { images: GalleryAsset[] }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.05 }}
-              className="group block overflow-hidden rounded-3xl surface-card p-2 text-left"
+              className="group block overflow-hidden rounded-3xl border border-white/14 bg-white/8 p-2 text-left backdrop-blur-sm"
             >
               <div className="aspect-[4/3] overflow-hidden rounded-[1.15rem]">
                 <img
@@ -1269,7 +1275,7 @@ function Testimonials() {
   }, [api]);
 
   return (
-    <section id="reviews" className="relative py-18 sm:py-20">
+    <section id="reviews" className="section-bg-light-gray relative py-18 sm:py-20">
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto flex max-w-5xl flex-col gap-5 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
           <div className="mx-auto max-w-2xl sm:mx-0">
@@ -1368,7 +1374,7 @@ function Rules() {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   return (
-    <section id="rules" className="relative bg-muted/40 py-18 sm:py-20">
+    <section id="rules" className="section-bg-soft-blue relative py-18 sm:py-20">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <SectionLabel>HOUSE RULES</SectionLabel>
@@ -1468,7 +1474,7 @@ function Contact({ roomOptions }: { roomOptions: string[] }) {
   };
 
   return (
-    <section id="contact" className="relative scroll-mt-28 pb-20 pt-18 sm:pb-22 sm:pt-20">
+    <section id="contact" className="section-bg-mint relative scroll-mt-28 pb-20 pt-18 sm:pb-22 sm:pt-20">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-2">
         <div>
           <SectionLabel>CONTACT US</SectionLabel>
@@ -1641,36 +1647,94 @@ function ContactRow({
 
 function Footer() {
   return (
-    <footer className="relative mt-6 bg-[#1E3A5F] text-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-[1.25fr_0.75fr_1fr]">
-        <div>
-          <BrandLogo className="h-14 w-14 rounded-[1.2rem] shadow-[0_18px_40px_rgba(0,0,0,0.18)]" />
-          <div className="mt-4 font-display text-2xl font-bold">Elite Stay PG</div>
-          <p className="mt-4 max-w-sm text-sm leading-7 text-white/78">
-            Safe • Comfortable • Student-Friendly Living Near MIT Pune
-          </p>
-        </div>
-        <FooterCol title="Explore" links={[...PRIMARY_NAV_LINKS]} />
-        <FooterCol
-          title="Contact"
-          links={[
-            { label: CONTACT_PHONE_DISPLAY, href: `tel:+${CONTACT_PHONE_RAW}` },
-            { label: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
-            { label: "Get Location", href: "#visit-map" },
-            { label: "Get Directions", href: MAPS_DIRECTIONS_URL, external: true },
-          ]}
-        />
-      </div>
-      <div className="border-t border-white/12">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-5 py-5 text-xs text-white/68 sm:flex-row">
-          <div>© {new Date().getFullYear()} Elite Stay PG. All rights reserved.</div>
-          <div>Safe • Comfortable • Student-Friendly Living Near MIT Pune</div>
+    <footer className="section-bg-footer relative mt-6 text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_20%,rgba(107,147,194,0.22),transparent_45%)]" />
+      <div className="relative mx-auto max-w-7xl px-5 py-6 sm:py-8">
+        <div className="rounded-2xl border border-white/14 bg-[#0b274a]/72 px-5 py-5 backdrop-blur-sm sm:px-6">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-[1.15fr_0.8fr_0.95fr_0.7fr]">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <BrandLogo className="h-9 w-9 rounded-lg shadow-[0_14px_28px_rgba(0,0,0,0.24)]" />
+                <div className="font-display text-lg font-bold">Elite Stay</div>
+              </div>
+              <p className="mt-3 max-w-xs text-xs leading-6 text-white/76">
+                Comfortable PG near MIT ADTU, Loni Kalbhor, Pune.
+              </p>
+            </div>
+
+            <FooterCol title="Quick Links" links={[...PRIMARY_NAV_LINKS]} />
+
+            <div>
+              <div className="mb-3 text-sm font-semibold text-white">Contact Info</div>
+              <ul className="space-y-2.5 text-xs text-white/78">
+                <li className="flex items-center gap-2">
+                  <Phone className="h-3.5 w-3.5" />
+                  <a href={`tel:+${CONTACT_PHONE_RAW}`} className="transition hover:text-white">
+                    +91 95539 61076
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Mail className="h-3.5 w-3.5" />
+                  <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-white">
+                    {CONTACT_EMAIL}
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <a
+                    href={MAPS_DIRECTIONS_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="transition hover:text-white"
+                  >
+                    Loni Kalbhor, Pune
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <div className="mb-3 text-sm font-semibold text-white">Follow Us</div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={WHATSAPP}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="WhatsApp"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-white/8 text-white transition hover:bg-white/16"
+                >
+                  <WhatsAppIcon className="h-4 w-4" />
+                </a>
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Instagram"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-white/8 text-white transition hover:bg-white/16"
+                >
+                  <Instagram className="h-4 w-4" />
+                </a>
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Facebook"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-white/8 text-white transition hover:bg-white/16"
+                >
+                  <Facebook className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 border-t border-white/14 pt-3 text-center text-[11px] text-white/72">
+            © {new Date().getFullYear()} Elite Stay PG Services. All rights reserved.
+          </div>
         </div>
       </div>
     </footer>
   );
 }
-
 function FooterCol({
   title,
   links,
@@ -1681,7 +1745,7 @@ function FooterCol({
   return (
     <div>
       <div className="mb-3 text-sm font-semibold text-white">{title}</div>
-      <ul className="space-y-2 text-sm text-white/78">
+      <ul className="space-y-1.5 text-xs text-white/78">
         {links.map((link) => (
           <li key={`${link.label}-${link.href}`}>
             <a
@@ -1727,10 +1791,18 @@ function FloatingActions() {
   );
 }
 
-function SectionLabel({ children }: { children: ReactNode }) {
+function SectionLabel({ children, tone = "default" }: { children: ReactNode; tone?: "default" | "light" }) {
+  const style =
+    tone === "light"
+      ? "bg-white/12 text-white/88 border border-white/20"
+      : "bg-muted text-muted-foreground";
+
   return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+    <span
+      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.22em] ${style}`}
+    >
       <span className="h-1 w-1 rounded-full bg-primary" /> {children}
     </span>
   );
 }
+

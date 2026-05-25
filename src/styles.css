@@ -135,6 +135,55 @@
   .amenity-marquee-track:hover {
     animation-play-state: paused;
   }
+
+  .section-bg-soft-blue {
+    background:
+      radial-gradient(120% 85% at 100% 100%, rgba(147, 179, 221, 0.2) 0%, rgba(147, 179, 221, 0) 70%),
+      radial-gradient(95% 80% at 0% 0%, rgba(162, 192, 231, 0.22) 0%, rgba(162, 192, 231, 0) 66%),
+      linear-gradient(160deg, #f9fbfe 0%, #edf4fb 52%, #e7f0f9 100%);
+  }
+
+  .section-bg-light-wave {
+    background:
+      radial-gradient(90% 75% at 20% 100%, rgba(174, 201, 233, 0.2) 0%, rgba(174, 201, 233, 0) 72%),
+      radial-gradient(90% 70% at 100% 0%, rgba(200, 218, 241, 0.28) 0%, rgba(200, 218, 241, 0) 68%),
+      linear-gradient(160deg, #ffffff 0%, #f3f8fd 58%, #edf5fc 100%);
+  }
+
+  .section-bg-dot-light {
+    background:
+      radial-gradient(circle at 1px 1px, rgba(24, 58, 98, 0.14) 0.9px, transparent 0),
+      radial-gradient(100% 85% at 85% 0%, rgba(180, 201, 230, 0.25) 0%, rgba(180, 201, 230, 0) 70%),
+      linear-gradient(150deg, #ffffff 0%, #f6f9fd 54%, #eef4fa 100%);
+    background-size: 18px 18px, auto, auto;
+  }
+
+  .section-bg-mint {
+    background:
+      radial-gradient(100% 90% at 0% 100%, rgba(128, 202, 165, 0.3) 0%, rgba(128, 202, 165, 0) 72%),
+      radial-gradient(90% 80% at 100% 0%, rgba(168, 219, 196, 0.28) 0%, rgba(168, 219, 196, 0) 70%),
+      linear-gradient(155deg, #f4fcf7 0%, #eaf8f1 55%, #e4f4ec 100%);
+  }
+
+  .section-bg-light-gray {
+    background:
+      radial-gradient(120% 85% at 50% -10%, rgba(188, 203, 219, 0.3) 0%, rgba(188, 203, 219, 0) 72%),
+      linear-gradient(180deg, #f8fbfe 0%, #eef3f8 100%);
+  }
+
+  .section-bg-navy {
+    background:
+      radial-gradient(95% 88% at 92% 2%, rgba(78, 124, 176, 0.38) 0%, rgba(78, 124, 176, 0) 62%),
+      radial-gradient(90% 80% at 8% 100%, rgba(57, 97, 146, 0.38) 0%, rgba(57, 97, 146, 0) 64%),
+      linear-gradient(145deg, #0f2f53 0%, #0c2645 55%, #0a1f38 100%);
+  }
+
+  .section-bg-footer {
+    background:
+      radial-gradient(85% 75% at 100% 0%, rgba(40, 87, 139, 0.52) 0%, rgba(40, 87, 139, 0) 68%),
+      radial-gradient(100% 85% at 0% 100%, rgba(31, 70, 116, 0.5) 0%, rgba(31, 70, 116, 0) 70%),
+      linear-gradient(150deg, #0b2240 0%, #0a1f39 55%, #081a31 100%);
+  }
 }
 
 @media (min-width: 768px) {

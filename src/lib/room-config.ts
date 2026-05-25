@@ -8,12 +8,13 @@ import gallery4 from "@/assets/gallery-4.jpg";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const ROOM_IMAGE_BUCKET = "room-images";
+export const MAX_ROOM_IMAGES = 4;
 export const DEFAULT_ADMIN_EMAIL = "admin@elitestay.com";
 export const DEFAULT_ADMIN_PASSWORD = "EliteStay@123";
 
 export type RoomCategorySlug = "one-room" | "two-room" | "three-room";
 
-type RoomCategoryImageRow = Pick<Tables<"room_categories">, "slug" | "image_path">;
+type RoomCategoryImageRow = Pick<Tables<"room_categories">, "slug" | "image_path" | "image_paths">;
 
 type RoomCardBase = {
   slug: RoomCategorySlug;
@@ -30,6 +31,8 @@ export type RoomCard = Omit<RoomCardBase, "defaultImages"> & {
   img: string;
   images: string[];
   imagePath: string | null;
+  imagePaths: string[];
+  customImages: string[];
 };
 
 const ROOM_CARD_BASE: RoomCardBase[] = [
@@ -71,6 +74,8 @@ export function getDefaultRoomCards(): RoomCard[] {
     img: defaultImages[0],
     images: [...defaultImages],
     imagePath: null,
+    imagePaths: [],
+    customImages: [],
   }));
 }
 
@@ -78,19 +83,30 @@ export function buildRoomCards(
   rows: RoomCategoryImageRow[] | null | undefined,
   resolveImage: (path: string) => string,
 ): RoomCard[] {
-  const imageMap = new Map(rows?.map((row) => [row.slug, row.image_path ?? null]) ?? []);
+  const imageMap = new Map(rows?.map((row) => [row.slug, normalizeRoomImagePaths(row)]) ?? []);
 
   return getDefaultRoomCards().map((room) => {
-    const imagePath = imageMap.get(room.slug) ?? null;
-    const images = imagePath ? [resolveImage(imagePath), ...room.images.slice(1)] : room.images;
+    const imagePaths = imageMap.get(room.slug) ?? [];
+    const customImages = imagePaths.map(resolveImage);
+    const images = customImages.length > 0 ? customImages : room.images;
 
     return {
       ...room,
-      img: images[0],
+      img: images[0] ?? room.img,
       images,
-      imagePath,
+      imagePath: imagePaths[0] ?? null,
+      imagePaths,
+      customImages,
     };
   });
 }
 
 export const ROOM_OPTION_LABELS = ROOM_CARD_BASE.map((room) => room.name);
+
+function normalizeRoomImagePaths(row: RoomCategoryImageRow): string[] {
+  const fromLegacy = row.image_path ? [row.image_path] : [];
+  const fromArray = (row.image_paths ?? []).filter((path): path is string => !!path && path.trim().length > 0);
+  const deduped = [...new Set([...fromLegacy, ...fromArray])];
+
+  return deduped.slice(0, MAX_ROOM_IMAGES);
+}

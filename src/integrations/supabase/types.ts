@@ -73,6 +73,7 @@ export type Database = {
           created_at: string
           id: string
           image_path: string | null
+          image_paths: string[]
           name: string
           slug: string
           updated_at: string
@@ -81,6 +82,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_path?: string | null
+          image_paths?: string[]
           name: string
           slug: string
           updated_at?: string
@@ -89,6 +91,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_path?: string | null
+          image_paths?: string[]
           name?: string
           slug?: string
           updated_at?: string
