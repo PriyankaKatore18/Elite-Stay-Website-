@@ -162,6 +162,24 @@ const FACILITY_ITEMS = [
   },
 ] as const;
 
+const FOOD_ITEMS = [
+  {
+    icon: Sparkles,
+    title: "Freshly Prepared Meals",
+    text: "Wholesome meals are prepared daily to support healthy student living.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Hygienic Food Standards",
+    text: "Clean cooking and serving practices help ensure safe and reliable meals.",
+  },
+  {
+    icon: Droplets,
+    title: "RO Water with Meals",
+    text: "Clean drinking water is available throughout the day for every resident.",
+  },
+] as const;
+
 const WHY_CHOOSE_ITEMS = [
   {
     icon: ShieldCheck,
@@ -309,6 +327,24 @@ const TESTIMONIALS = [
   },
 ] as const;
 
+const PARENT_TRUST_ITEMS = [
+  {
+    icon: ShieldCheck,
+    title: "Safety-First Environment",
+    text: "CCTV monitoring and clear rules help maintain secure student accommodation.",
+  },
+  {
+    icon: Sparkles,
+    title: "Clean & Managed Property",
+    text: "Regular housekeeping and active management keep daily living comfortable.",
+  },
+  {
+    icon: Phone,
+    title: "Responsive Support",
+    text: "Parents and residents can connect quickly with the team whenever needed.",
+  },
+] as const;
+
 function getTestimonialsPerView(viewportWidth: number) {
   if (viewportWidth >= 1024) {
     return 3;
@@ -335,7 +371,9 @@ const PRIMARY_NAV_LINKS = [
   { label: "About", href: "#about" },
   { label: "Rooms", href: "#rooms" },
   { label: "Facilities", href: "#facilities" },
+  { label: "Food", href: "#food" },
   { label: "Gallery", href: "#gallery" },
+  { label: "Location", href: "#location" },
   { label: "Contact", href: "#contact" },
 ] as const;
 
@@ -454,12 +492,15 @@ function Landing() {
       <Nav />
       <Hero heroImage={heroMedia} />
       <Stats />
-      <Facilities />
-      <Gallery images={allGalleryImages} />
       <About images={allGalleryImages} />
-      <Testimonials />
       <Rooms rooms={rooms} />
+      <Facilities />
+      <Food />
+      <Gallery images={allGalleryImages} />
       <WhyChooseUs />
+      <ParentTrust />
+      <Location />
+      <Testimonials />
       <Rules />
       <Contact roomOptions={rooms.map((room) => room.name)} />
       <Footer />
@@ -690,9 +731,7 @@ function Hero({ heroImage }: { heroImage: SiteMediaAsset }) {
             Near MIT ADT Pune
           </span>
           <h1 className="mt-6 max-w-4xl font-display text-5xl leading-[1.02] font-bold text-white sm:text-6xl lg:text-7xl">
-            Safe & Comfortable PG
-            <br />
-            <span className="text-white/88">Near MIT Pune</span>
+            Safe & Comfortable PG Near MIT Pune
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-white/82">
             Fully furnished single, twin & triple sharing rooms designed for students and working
@@ -741,7 +780,7 @@ function Hero({ heroImage }: { heroImage: SiteMediaAsset }) {
       </div>
 
       <motion.a
-        href="#about"
+        href="#trust-bar"
         animate={{ y: [0, 8, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
         className="absolute bottom-8 left-1/2 z-10 inline-flex -translate-x-1/2 flex-col items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/80"
@@ -775,8 +814,14 @@ function Stats() {
   const marqueeItems = [...items, ...items];
 
   return (
-    <section className="section-bg-soft-blue relative pb-7 pt-5 sm:pb-8 sm:pt-6">
-      <div className="px-3 sm:px-5 lg:px-6">
+    <section id="trust-bar" className="section-bg-soft-blue relative pb-7 pt-8 sm:pb-8 sm:pt-10">
+      <div className="mx-auto max-w-7xl px-5 text-center">
+        <SectionLabel>TRUST BAR</SectionLabel>
+        <h2 className="mt-3 font-display text-3xl font-bold sm:text-4xl">
+          Trusted by Students & Parents
+        </h2>
+      </div>
+      <div className="mt-6 px-3 sm:px-5 lg:px-6">
         <div className="section-bg-light-wave relative overflow-hidden rounded-[2.2rem] border border-[#d9e4ee] px-3 py-3 shadow-[0_24px_70px_-42px_rgba(16,32,51,0.38)] sm:px-4 sm:py-4">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top,_rgba(30,58,95,0.08),_transparent_72%)]" />
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-14 bg-gradient-to-r from-[#eef4f9] via-[#eef4f9]/94 to-transparent sm:w-18" />
@@ -826,7 +871,7 @@ function About({ images }: { images: GalleryAsset[] }) {
           <div>
             <SectionLabel>ABOUT ELITE STAY PG</SectionLabel>
             <h2 className="mt-4 font-display text-4xl leading-tight font-bold sm:text-5xl">
-              A peaceful and student-friendly place to stay
+              A Peaceful Place to Stay, Study & Grow
             </h2>
             <p className="mt-5 text-justify text-[1.02rem] leading-8 text-muted-foreground sm:text-[1.05rem]">
               Elite Stay PG offers safe, clean, and fully maintained accommodation near MIT Pune.
@@ -991,7 +1036,7 @@ function Rooms({ rooms }: { rooms: RoomCard[] }) {
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
           <SectionLabel>ROOM OPTIONS</SectionLabel>
-          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Choose your perfect stay</h2>
+          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Choose Your Perfect Stay</h2>
           <p className="mt-4 text-muted-foreground">
             Affordable single, twin & triple sharing rooms for students and professionals.
           </p>
@@ -1068,7 +1113,7 @@ function Facilities() {
           <div className="relative max-w-3xl">
             <SectionLabel>FACILITIES</SectionLabel>
             <h2 className="mt-4 font-display text-4xl leading-tight font-bold sm:text-5xl lg:text-6xl">
-              Everything you need for a comfortable stay
+              Everything You Need for Comfortable Living
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
               High-speed Wi-Fi, daily cleaning, CCTV security, 24/7 water supply, power backup,
@@ -1124,15 +1169,50 @@ function Facilities() {
   );
 }
 
+function Food() {
+  return (
+    <section id="food" className="section-bg-light-gray relative scroll-mt-28 py-18 sm:py-20">
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="mx-auto max-w-3xl text-center">
+          <SectionLabel>FOOD</SectionLabel>
+          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
+            Healthy & Hygienic Food Served Daily
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Nutritious, clean, and consistent meal support for a comfortable student routine.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-5 md:grid-cols-3">
+          {FOOD_ITEMS.map((item, index) => (
+            <motion.article
+              key={item.title}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: index * 0.07 }}
+              className="rounded-3xl border border-border/80 bg-white p-6 shadow-[var(--shadow-soft)]"
+            >
+              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground">
+                <item.icon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 font-display text-2xl font-bold">{item.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.text}</p>
+            </motion.article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function WhyChooseUs() {
   return (
-    <section className="section-bg-soft-blue relative py-18 sm:py-20">
+    <section id="why-choose-us" className="section-bg-soft-blue relative scroll-mt-28 py-18 sm:py-20">
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
           <SectionLabel>WHY ELITE STAY PG</SectionLabel>
-          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
-            Trusted by students and parents
-          </h2>
+          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Why Students Choose Elite Stay</h2>
         </div>
 
         <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -1158,6 +1238,99 @@ function WhyChooseUs() {
   );
 }
 
+function ParentTrust() {
+  return (
+    <section id="parent-trust" className="section-bg-light-wave relative scroll-mt-28 py-18 sm:py-20">
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="mx-auto max-w-3xl text-center">
+          <SectionLabel>PARENT TRUST</SectionLabel>
+          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
+            Trusted by Parents for Safe Living
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            A secure, disciplined, and well-managed environment that gives families confidence.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-5 md:grid-cols-3">
+          {PARENT_TRUST_ITEMS.map((item, index) => (
+            <motion.article
+              key={item.title}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: index * 0.07 }}
+              className="rounded-3xl border border-border/80 bg-white p-6 shadow-[var(--shadow-soft)]"
+            >
+              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground">
+                <item.icon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 font-display text-2xl font-bold">{item.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.text}</p>
+            </motion.article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Location() {
+  return (
+    <section id="location" className="section-bg-mint relative scroll-mt-28 py-18 sm:py-20">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-2">
+        <div>
+          <SectionLabel>LOCATION</SectionLabel>
+          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
+            Conveniently Located Near MIT ADTU
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Elite Stay PG is close to campus, daily essentials, and local transport for easier
+            student life.
+          </p>
+
+          <div className="mt-8 space-y-4">
+            <ContactRow icon={MapPin} title="Address" detail={CONTACT_ADDRESS} />
+            <ContactRow icon={Star} title="Distance" detail="Around 5 minutes from MIT campus" />
+            <ContactRow icon={BookOpen} title="Nearby Access" detail="Shops, transport, and daily essentials" />
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href={MAPS_DIRECTIONS_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition hover:scale-[1.03]"
+            >
+              <MapPin className="h-4 w-4" />
+              Get Directions
+            </a>
+            <a
+              href={WHATSAPP}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-5 py-3 font-semibold text-white shadow-[var(--shadow-soft)] transition hover:scale-[1.03] hover:bg-[#1fb85a]"
+            >
+              <WhatsAppIcon className="h-5 w-5" /> WhatsApp Enquiry
+            </a>
+          </div>
+        </div>
+
+        <div id="visit-map" className="scroll-mt-28 overflow-hidden rounded-3xl surface-card">
+          <iframe
+            title="Elite Stay location map"
+            src={MAP_EMBED}
+            className="h-[360px] w-full border-0 lg:h-full"
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Gallery({ images }: { images: GalleryAsset[] }) {
   const [open, setOpen] = useState<{ src: string; alt: string } | null>(null);
 
@@ -1166,9 +1339,7 @@ function Gallery({ images }: { images: GalleryAsset[] }) {
       <div className="mx-auto max-w-7xl px-5">
         <div className="mx-auto max-w-2xl text-center">
           <SectionLabel tone="light">OUR GALLERY</SectionLabel>
-          <h2 className="mt-3 font-display text-4xl font-bold text-white sm:text-5xl">
-            Take a look inside Elite Stay PG
-          </h2>
+          <h2 className="mt-3 font-display text-4xl font-bold text-white sm:text-5xl">Explore Elite Stay PG</h2>
           <p className="mt-4 text-white/78">
             Explore our clean rooms, modern facilities, and comfortable living spaces.
           </p>
@@ -1280,9 +1451,7 @@ function Testimonials() {
         <div className="mx-auto flex max-w-5xl flex-col gap-5 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
           <div className="mx-auto max-w-2xl sm:mx-0">
             <SectionLabel>TESTIMONIALS</SectionLabel>
-            <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
-              What our residents say
-            </h2>
+            <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">What Our Residents Say</h2>
             <p className="mt-3 text-muted-foreground">
               Real feedback from students and professionals staying at Elite Stay.
             </p>
@@ -1378,9 +1547,7 @@ function Rules() {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <SectionLabel>HOUSE RULES</SectionLabel>
-          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
-            Calm, safe & well-managed living
-          </h2>
+          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Calm, Safe & Well-Managed Living</h2>
           <p className="mt-4 text-muted-foreground">
             Simple rules to ensure a peaceful and comfortable stay for everyone.
           </p>
@@ -1401,10 +1568,10 @@ function Rules() {
               </div>
             </div>
             <a
-              href="#visit-map"
+              href="#location"
               className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:gap-3"
             >
-              View location map on site
+              View location section
               <ExternalLink className="h-4 w-4" />
             </a>
           </div>
@@ -1478,7 +1645,7 @@ function Contact({ roomOptions }: { roomOptions: string[] }) {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-2">
         <div>
           <SectionLabel>CONTACT US</SectionLabel>
-          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Book your stay today</h2>
+          <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Book Your Stay Today</h2>
           <p className="mt-4 text-muted-foreground">
             Looking for a safe and comfortable PG near MIT Pune? Contact us for room availability
             and bookings.
@@ -1506,23 +1673,12 @@ function Contact({ roomOptions }: { roomOptions: string[] }) {
               <WhatsAppIcon className="h-5 w-5" /> WhatsApp Enquiry
             </a>
             <a
-              href="#visit-map"
+              href="#location"
               className="inline-flex items-center gap-2 rounded-2xl border border-border bg-white px-5 py-3 font-semibold text-foreground transition hover:scale-[1.03]"
             >
               <MapPin className="h-4 w-4" />
               Get Location
             </a>
-          </div>
-
-          <div id="visit-map" className="mt-8 scroll-mt-28 overflow-hidden rounded-3xl surface-card">
-            <iframe
-              title="Elite Stay location map"
-              src={MAP_EMBED}
-              className="h-[340px] w-full border-0"
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
           </div>
         </div>
 
@@ -1658,7 +1814,7 @@ function Footer() {
                 <div className="font-display text-lg font-bold">Elite Stay</div>
               </div>
               <p className="mt-3 max-w-xs text-xs leading-6 text-white/76">
-                Comfortable PG near MIT ADTU, Loni Kalbhor, Pune.
+                Elite Stay PG - Safe • Comfortable • Student-Friendly Living
               </p>
             </div>
 
